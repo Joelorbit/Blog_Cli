@@ -1,0 +1,6 @@
+{
+  "title": "Hello World",
+  "slug": "hello-world",
+  "content": "<h1>Hello World</h1>\n<p>This is my <strong>first real post</strong> published with the blog CLI.</p>\n",
+  "date": "2026-07-19"
+}
