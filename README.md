@@ -1,6 +1,6 @@
-# Blog CLI
+# Blog CLI + Content
 
-Write markdown anywhere on your computer. Publish it to GitHub with one command. Your portfolio reads the posts straight from this repo.
+One repo for everything: the CLI code lives here, and every post you publish lands in the **`posts/`** folder. Your website fetches posts straight from this repo — no server, no database.
 
 ## Requirements
 
@@ -37,22 +37,24 @@ Pushed to GitHub
 Published successfully
 ```
 
-Done. The post is live on GitHub.
+Done. The post is live in this repo under `posts/`.
 
 ## Rules to know
 
 - **The filename becomes the title.** `my-first-post.md` → "My First Post"
 - **Accepted file types:** `.md`, `.markdown`, `.txt`
 - **Publishing the same filename again updates that post** (same slug, new content).
+- Publishing only ever commits the `posts/` folder — it never touches your code.
 - Get help anytime: `node cli.js --help`
 
-## What ends up in the repo
+## Repo structure
 
 ```
-content/
-  posts.json           ← index of all posts (title, slug, date) — newest first
-  posts/
-    my-first-post.json ← one file per post, with the full HTML content
+cli.js               ← the command you run
+src/                 ← the code (see doc.md for a full walkthrough)
+posts/               ← ★ your published posts — your website fetches THIS
+  index.json         ← list of all posts (title, slug, date) — newest first
+  my-first-post.json ← one file per post, full HTML content
 ```
 
 ## Post JSON format
@@ -66,15 +68,15 @@ content/
 }
 ```
 
-## Using the posts in your portfolio
+## Fetching posts from your website
 
 ```javascript
 // Get the list of all posts
-const res = await fetch("https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/content/posts.json");
+const res = await fetch("https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/posts/index.json");
 const posts = await res.json();
 
 // Get one full post by slug
-const post = await fetch(`https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/content/posts/${slug}.json`);
+const post = await fetch(`https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/posts/${slug}.json`);
 ```
 
 ## Project files
@@ -85,8 +87,8 @@ const post = await fetch(`https://raw.githubusercontent.com/Joelorbit/Blog_Conte
 | `src/publish.js` | The publish pipeline, step by step |
 | `src/markdown.js` | Converts markdown → HTML |
 | `src/post.js` | Builds the post object (title, slug, content, date) |
-| `src/storage.js` | Writes the JSON files into `content/` |
-| `src/git.js` | Commits and pushes to GitHub |
-| `content/` | Your published posts (this is what your portfolio fetches) |
+| `src/storage.js` | Writes the JSON files into `posts/` |
+| `src/git.js` | Commits `posts/` and pushes to GitHub |
+| `posts/` | Your published posts (what your website fetches) |
 
 Want to understand how every line of code works? Read **[doc.md](doc.md)**.

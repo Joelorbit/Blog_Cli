@@ -6,13 +6,13 @@ This document explains the whole codebase, file by file, so you can understand a
 
 ## The big picture
 
-When you run `node cli.js publish my-note.md`, this happens:
+Everything lives in **one repo** (`Joelorbit/Blog_Content`): the CLI code, and the published posts in `posts/`. When you run `node cli.js publish my-note.md`, this happens:
 
 ```
 cli.js  →  src/publish.js  →  src/markdown.js  (markdown → HTML)
                            →  src/post.js      (build the post object)
-                           →  src/storage.js   (write JSON files)
-                           →  src/git.js       (commit + push)
+                           →  src/storage.js   (write JSON into posts/)
+                           →  src/git.js       (commit posts/ + push)
 ```
 
 One entry point, one pipeline, four small helpers. Each file does exactly one job.
@@ -133,15 +133,15 @@ const slug = basename
   .replace(/[^a-z0-9]+/g, "-")   // anything not a letter/number → "-"
   .replace(/^-|-$/g, "");        // trim "-" from start/end
 ```
-- A **slug** is the URL-safe ID of the post — it becomes the JSON filename (`my-first-post.json`) and what your portfolio uses to fetch it.
+- A **slug** is the URL-safe ID of the post — it becomes the JSON filename (`my-first-post.json`) and what your website uses to fetch it.
 - `[^a-z0-9]+` means "one or more characters that are NOT a-z or 0-9" — spaces, dots, emoji, whatever — all collapse into a single dash.
 
 ### Steps 4–7: delegate to the helpers
 
 ```js
-const content = convertMarkdown(raw);          // markdown.js
+const content = convertMarkdown(raw);            // markdown.js
 const post = generatePost(title, slug, content); // post.js
-await savePost(slug, post);                    // storage.js
+await savePost(slug, post);                      // storage.js
 const result = await commitAndPush(slug, title); // git.js
 ```
 
@@ -152,13 +152,11 @@ if (result.error === "no_changes") {
   console.log("No changes to commit.");
 } else if (result.pushed) {
   console.log("Pushed to GitHub");
-} else if (result.error === "no_remote") {
-  // prints instructions for adding a remote
 } else if (result.error) {
   // push failed (e.g. no internet) — post is still saved locally
 }
 ```
-- `git.js` never throws; it returns a result object describing what happened. This block turns that into friendly messages. Key idea: **even if the push fails, your post is already saved locally** — you can push later by hand.
+- `git.js` never throws; it returns a result object describing what happened. This block turns that into friendly messages. Key idea: **even if the push fails, your post is already saved and committed locally** — you can push later with `git push origin main`.
 
 ---
 
@@ -197,11 +195,19 @@ export function generatePost(title, slug, content) {
 
 ## 6. `src/storage.js` — writing the JSON files
 
-Two constants define the layout:
+### Finding the project root
 
 ```js
-const POSTS_DIR  = "content/posts";       // one file per post
-const INDEX_FILE = "content/posts.json";  // the list of all posts
+export const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+```
+- `import.meta.url` is the location of `storage.js` itself. Two `dirname` calls walk up: `src/storage.js` → `src/` → project root.
+- Why? So `node cli.js publish ...` works **no matter which folder you run it from** — posts always land in the right place.
+
+### The layout, defined in two constants
+
+```js
+const POSTS_DIR  = path.join(ROOT, "posts");          // one file per post
+const INDEX_FILE = path.join(POSTS_DIR, "index.json"); // the list of all posts
 ```
 
 ### `savePost(slug, post)`
@@ -209,15 +215,15 @@ const INDEX_FILE = "content/posts.json";  // the list of all posts
 ```js
 await fs.mkdir(POSTS_DIR, { recursive: true });
 ```
-- Makes sure `content/posts/` exists. `recursive: true` = create parent folders too, and don't error if it's already there.
+- Makes sure `posts/` exists. `recursive: true` = create parents too, and don't error if it's already there.
 
 ```js
 const postFile = path.join(POSTS_DIR, `${slug}.json`);
 await fs.writeFile(postFile, JSON.stringify(post, null, 2));
 ```
-- Writes the full post to `content/posts/<slug>.json`. `JSON.stringify(obj, null, 2)` = pretty-print with 2-space indentation so it's readable on GitHub.
+- Writes the full post to `posts/<slug>.json`. `JSON.stringify(obj, null, 2)` = pretty-print with 2-space indentation so it's readable on GitHub.
 
-### `updateIndex(slug, newPost)` — keeping `posts.json` correct
+### `updateIndex(slug, newPost)` — keeping `posts/index.json` correct
 
 ```js
 try {
@@ -237,13 +243,18 @@ posts = posts.filter((p) => p.slug !== slug);
 posts.unshift({ title: newPost.title, slug: newPost.slug, date: newPost.date });
 ```
 - `unshift` adds to the *front* of the array → newest post first.
-- Notice: **no `content` field**. The index stays small so your portfolio can fetch the whole list cheaply; full HTML lives only in the per-post file.
+- Notice: **no `content` field**. The index stays small so your website can fetch the whole list cheaply; full HTML lives only in the per-post file.
 
 ---
 
 ## 7. `src/git.js` — commit and push
 
-This file talks to git by running real git commands with `execSync` (run a shell command and wait for it).
+This file talks to git by running real git commands with `execSync` (run a shell command and wait for it). All commands run at the project `ROOT`.
+
+```js
+const REMOTE_URL = "https://github.com/Joelorbit/Blog_Content.git";
+```
+- The one repo everything pushes to. Change this constant if you ever move the blog.
 
 ### Safety net: is this even a git repo?
 
@@ -261,23 +272,29 @@ try {
 ### Stage and commit
 
 ```js
-execSync("git add content/", { cwd });
+execSync("git add posts/", { cwd });
 try {
-  execSync(`git commit -m "blog: ${title}"`, { cwd });
+  execSync(`git commit -m "blog: ${title}"`, { cwd, stdio: "pipe" });
 } catch {
   return { pushed: false, error: "no_changes" };
 }
 ```
-- Only `content/` is staged — publishing never accidentally commits code changes.
-- `git commit` **fails when there is nothing to commit** — we use that: catching the failure is how we detect "you published the exact same file twice".
+- **Only `posts/` is staged** — publishing never accidentally commits code changes you're working on.
+- `git commit` fails when there is nothing to commit — we use that: catching the failure is how we detect "you published the exact same file twice".
 - Commit messages always look like `blog: My First Post`, so blog commits are easy to spot in history.
 
-### Check for a remote, then push
+### Make sure the remote exists
 
 ```js
-const remote = execSync("git remote get-url origin", { cwd, stdio: "pipe" });
+try {
+  execSync("git remote get-url origin", { cwd, stdio: "pipe" });
+} catch {
+  execSync(`git remote add origin ${REMOTE_URL}`, { cwd });
+}
 ```
-- Asks git "is there an `origin` remote?". `stdio: "pipe"` captures the output quietly instead of printing it. If this throws → no remote → return `{ error: "no_remote" }` (publish.js then prints setup instructions).
+- Asks git "is there an `origin` remote?" (`stdio: "pipe"` captures output quietly). If not, it's added automatically — one less thing to set up.
+
+### Push
 
 ```js
 try {
@@ -296,19 +313,18 @@ try {
 
 ---
 
-## 8. `content/` — the output (what GitHub serves)
+## 8. `posts/` — the output (what your website fetches)
 
 ```
-content/
-  posts.json            ← [{ title, slug, date }, ...]  newest first
-  posts/
-    <slug>.json         ← { title, slug, content (HTML), date }
+posts/
+  index.json      ← [{ title, slug, date }, ...]  newest first
+  <slug>.json     ← { title, slug, content (HTML), date }
 ```
 
-Your portfolio never runs this code — it just fetches these files raw from GitHub:
+Your website never runs this code — it just fetches these files raw from GitHub:
 
-- List: `https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/content/posts.json`
-- Post: `https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/content/posts/<slug>.json`
+- List: `https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/posts/index.json`
+- Post: `https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/posts/<slug>.json`
 
 ---
 
@@ -328,13 +344,16 @@ blog-data/      ← leftover folder from an old version, ignored just in case
 Edit your original markdown file and run `publish` on it again. Same filename → same slug → the post is replaced.
 
 **How do I delete a post?**
-Delete `content/posts/<slug>.json`, remove its entry from `content/posts.json`, then:
+Delete `posts/<slug>.json`, remove its entry from `posts/index.json`, then:
 ```bash
-git add content/ && git commit -m "blog: remove <slug>" && git push origin main
+git add posts/ && git commit -m "blog: remove <slug>" && git push origin main
 ```
 
 **Why did it say "No changes to commit"?**
 You published a file whose output is identical to what's already there. Nothing to do.
+
+**I changed code files — will publish push them?**
+No. Publishing stages only `posts/`. Code changes you commit and push yourself, normally.
 
 **Can I add fields like tags or a description?**
 Yes — add them in `src/post.js` (the post object), and in `src/storage.js` inside `updateIndex` if you also want them in the list.

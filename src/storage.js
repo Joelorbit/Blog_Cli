@@ -1,19 +1,23 @@
 import fs from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const CONTENT_DIR = "content";
-const POSTS_DIR = path.join(CONTENT_DIR, "posts");
-const INDEX_FILE = path.join(CONTENT_DIR, "posts.json");
+// Absolute path to the project root (the folder containing cli.js),
+// so publishing works no matter which directory you run the command from.
+export const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+
+const POSTS_DIR = path.join(ROOT, "posts");
+const INDEX_FILE = path.join(POSTS_DIR, "index.json");
 
 export async function savePost(slug, post) {
-  // Ensure directories exist
+  // Ensure the posts/ folder exists
   await fs.mkdir(POSTS_DIR, { recursive: true });
 
-  // Save individual post
+  // Save individual post: posts/<slug>.json
   const postFile = path.join(POSTS_DIR, `${slug}.json`);
   await fs.writeFile(postFile, JSON.stringify(post, null, 2));
 
-  // Update index
+  // Update the index: posts/index.json
   await updateIndex(slug, post);
 }
 
