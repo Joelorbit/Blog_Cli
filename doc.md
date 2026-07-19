@@ -6,7 +6,7 @@ This document explains the whole codebase, file by file, so you can understand a
 
 ## The big picture
 
-Everything lives in **one repo** (`Joelorbit/Blog_Content`): the CLI code, and the published posts in `posts/`. When you run `node cli.js publish my-note.md`, this happens:
+Everything lives in **one repo** (`Joelorbit/Blog_Cli`): the CLI code, and the published posts in `posts/`. When you run `node cli.js publish my-note.md`, this happens:
 
 ```
 cli.js  →  src/publish.js  →  src/markdown.js  (markdown → HTML)
@@ -252,7 +252,7 @@ posts.unshift({ title: newPost.title, slug: newPost.slug, date: newPost.date });
 This file talks to git by running real git commands with `execSync` (run a shell command and wait for it). All commands run at the project `ROOT`.
 
 ```js
-const REMOTE_URL = "https://github.com/Joelorbit/Blog_Content.git";
+const REMOTE_URL = "https://github.com/Joelorbit/Blog_Cli.git";
 ```
 - The one repo everything pushes to. Change this constant if you ever move the blog.
 
@@ -323,8 +323,8 @@ posts/
 
 Your website never runs this code — it just fetches these files raw from GitHub:
 
-- List: `https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/posts/index.json`
-- Post: `https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/posts/<slug>.json`
+- List: `https://raw.githubusercontent.com/Joelorbit/Blog_Cli/main/posts/index.json`
+- Post: `https://raw.githubusercontent.com/Joelorbit/Blog_Cli/main/posts/<slug>.json`
 
 ---
 

@@ -10,7 +10,7 @@ One repo for everything: the CLI code lives here, and every post you publish lan
 ## Setup (one time)
 
 ```bash
-git clone https://github.com/Joelorbit/Blog_Content.git
+git clone https://github.com/Joelorbit/Blog_Cli.git
 cd Blog_Content
 npm install
 ```
@@ -72,11 +72,11 @@ posts/               ← ★ your published posts — your website fetches THIS
 
 ```javascript
 // Get the list of all posts
-const res = await fetch("https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/posts/index.json");
+const res = await fetch("https://raw.githubusercontent.com/Joelorbit/Blog_Cli/main/posts/index.json");
 const posts = await res.json();
 
 // Get one full post by slug
-const post = await fetch(`https://raw.githubusercontent.com/Joelorbit/Blog_Content/main/posts/${slug}.json`);
+const post = await fetch(`https://raw.githubusercontent.com/Joelorbit/Blog_Cli/main/posts/${slug}.json`);
 ```
 
 ## Project files

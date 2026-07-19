@@ -5,7 +5,7 @@ import { ROOT } from "./storage.js";
 
 // The one repo everything lives in. Posts are committed into posts/
 // and pushed here; your website fetches them from this repo.
-const REMOTE_URL = "https://github.com/Joelorbit/Blog_Content.git";
+const REMOTE_URL = "https://github.com/Joelorbit/Blog_Cli.git";
 
 export async function commitAndPush(slug, title) {
   // All git commands run at the project root
