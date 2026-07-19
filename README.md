@@ -11,17 +11,18 @@ One repo for everything: the CLI code lives here, and every post you publish lan
 
 ```bash
 git clone https://github.com/Joelorbit/Blog_Cli.git
-cd Blog_Content
+cd Blog_Cli
 npm install
+npm link     # makes the `publish` command work from ANY folder
 ```
 
 ## How to publish a post
 
 1. Write a markdown file anywhere, e.g. `~/Desktop/my-first-post.md`
-2. Run:
+2. From **any** folder, run:
 
 ```bash
-node cli.js publish ~/Desktop/my-first-post.md
+publish ~/Desktop/my-first-post.md
 ```
 
 You will see:
@@ -45,7 +46,8 @@ Done. The post is live in this repo under `posts/`.
 - **Accepted file types:** `.md`, `.markdown`, `.txt`
 - **Publishing the same filename again updates that post** (same slug, new content).
 - Publishing only ever commits the `posts/` folder — it never touches your code.
-- Get help anytime: `node cli.js --help`
+- All of these do the same thing: `publish note.md`, `blog note.md`, `blog publish note.md`, `node cli.js publish note.md`
+- Get help anytime: `publish --help`
 
 ## Repo structure
 

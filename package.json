@@ -4,7 +4,8 @@
   "description": "Publish markdown files as blog posts to GitHub",
   "type": "module",
   "bin": {
-    "blog": "./cli.js"
+    "blog": "./cli.js",
+    "publish": "./cli.js"
   },
   "scripts": {
     "start": "node cli.js"

@@ -25,13 +25,13 @@ One entry point, one pipeline, four small helpers. Each file does exactly one jo
 {
   "name": "blog-cli",
   "type": "module",
-  "bin": { "blog": "./cli.js" },
+  "bin": { "blog": "./cli.js", "publish": "./cli.js" },
   "dependencies": { "marked": "^15.0.0" }
 }
 ```
 
 - `"type": "module"` — lets us use modern `import`/`export` syntax instead of the older `require()`.
-- `"bin"` — if you ever run `npm link`, this makes the command `blog` available globally, so you can type `blog publish note.md` from anywhere instead of `node cli.js publish note.md`.
+- `"bin"` — this is what makes the **global commands** work. After you run `npm link` once, both `publish` and `blog` become real commands you can type from ANY folder — no `cd`, no `node cli.js`. Both names point to the same file, `cli.js`.
 - `"dependencies"` — the only outside library is **marked**, a popular markdown-to-HTML converter. Everything else is plain Node.js.
 
 ---
@@ -43,11 +43,11 @@ This is the file Node runs first. Its only job: figure out what you asked for an
 ```js
 const args = process.argv.slice(2);
 ```
-- `process.argv` is the full command line as an array. For `node cli.js publish note.md` it is `["node", "cli.js", "publish", "note.md"]`.
-- `.slice(2)` throws away the first two entries (the node binary and the script name), leaving just what *you* typed: `["publish", "note.md"]`.
+- `process.argv` is the full command line as an array. For `publish note.md` it is `["node", "/path/to/cli.js", "note.md"]`.
+- `.slice(2)` throws away the first two entries (the node binary and the script path), leaving just what *you* typed: `["note.md"]`.
 
 ```js
-if (args.length === 0 || args[0] === "--help") {
+if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
   console.log(` ...usage text... `);
   process.exit(0);
 }
@@ -55,28 +55,31 @@ if (args.length === 0 || args[0] === "--help") {
 - No arguments, or `--help`? Print the help text and stop. `process.exit(0)` means "quit successfully" (exit code 0 = success in the terminal world).
 
 ```js
-if (command === "publish") {
-  const filePath = args[1];
+let filePath;
+if (args[0] === "publish") {
+  filePath = args[1];
   if (!filePath) { ...error... process.exit(1); }
-```
-- The first word is the command. If it's `publish`, the second word must be the file path. Missing? Print an error and `process.exit(1)` — exit code 1 means "something went wrong".
-
-```js
-  try {
-    await publish(filePath);
-  } catch (e) {
-    console.error(`Error: ${e.message}`);
-    process.exit(1);
-  }
-```
-- Call the pipeline. If *anything* inside throws an error, we catch it here, print a clean one-line message instead of a scary stack trace, and exit with failure.
-
-```js
+} else if (!args[0].startsWith("-")) {
+  filePath = args[0];
 } else {
-  console.error(`Unknown command: ${command}`);
+  console.error(`Unknown option: ${args[0]}`);
+  process.exit(1);
 }
 ```
-- Typed something that isn't `publish`? Tell the user and point them to `--help`.
+- This is what makes **both styles** work:
+  - `publish note.md` → first argument isn't the word "publish" and isn't a flag → treat it as the file directly.
+  - `blog publish note.md` → first argument IS "publish" → the file is the second argument.
+- Anything starting with `-` that isn't `--help` is an unknown flag → error. `process.exit(1)` — exit code 1 means "something went wrong".
+
+```js
+try {
+  await publish(filePath);
+} catch (e) {
+  console.error(`Error: ${e.message}`);
+  process.exit(1);
+}
+```
+- Call the pipeline. If *anything* inside throws an error, we catch it here, print a clean one-line message instead of a scary stack trace, and exit with failure.
 
 ---
 
