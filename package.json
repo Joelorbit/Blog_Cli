@@ -1,12 +1,11 @@
 {
   "name": "blog-cli",
-  "version": "1.0.0",
-  "description": "Publish markdown files as blog posts from your terminal",
+  "version": "2.0.0",
+  "description": "Publish markdown/text posts to GitHub from your terminal",
   "type": "module",
   "bin": {
     "blog": "./cli.js"
   },
-  "main": "./cli.js",
   "scripts": {
     "start": "node cli.js"
   },
@@ -15,15 +14,10 @@
     "markdown",
     "publish",
     "cli",
-    "terminal",
-    "github",
-    "portfolio"
+    "github"
   ],
   "author": "Joelorbit",
   "license": "MIT",
-  "dependencies": {
-    "marked": "^15.0.0"
-  },
   "engines": {
     "node": ">=18"
   }

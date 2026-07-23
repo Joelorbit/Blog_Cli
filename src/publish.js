@@ -1,128 +1,84 @@
 import fs from "fs/promises";
 import path from "path";
-import { convertMarkdown } from "./markdown.js";
-import { generatePost } from "./post.js";
-import { savePost, getConfig } from "./storage.js";
 import { commitAndPush } from "./git.js";
-import { findImages, copyImages, rewriteImageUrls } from "./media.js";
 
-const MD_EXTS = new Set([".md", ".markdown", ".txt"]);
-
-// ── Resolve input ──────────────────────────────────────────────
-
-async function resolveInput(inputPath) {
-  const resolved = path.resolve(inputPath);
-  const stat = await fs.stat(resolved);
-
-  if (stat.isDirectory()) {
-    return resolveFolder(resolved);
-  }
-
-  return resolveFile(resolved);
-}
-
-async function resolveFolder(dir) {
-  const entries = await fs.readdir(dir);
-  const mdFile = entries.find((e) => MD_EXTS.has(path.extname(e).toLowerCase()));
-
-  if (!mdFile) {
-    console.error(`Error: No markdown file found in ${dir}`);
-    process.exit(1);
-  }
-
-  return {
-    markdownPath: path.join(dir, mdFile),
-    sourceDir: dir,
-  };
-}
-
-async function resolveFile(filePath) {
-  const ext = path.extname(filePath).toLowerCase();
-  if (!MD_EXTS.has(ext)) {
-    console.error("Error: File must be .md, .markdown, or .txt");
-    process.exit(1);
-  }
-
-  return {
-    markdownPath: filePath,
-    sourceDir: path.dirname(filePath),
-  };
-}
-
-// ── Generate slug and title from filename ──────────────────────
-
-function slugFromFilename(filename) {
-  const base = path.basename(filename, path.extname(filename));
-  return base
+function slug(name) {
+  return name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
 
-function titleFromFilename(filename) {
-  const base = path.basename(filename, path.extname(filename));
-  return base
+function title(name) {
+  return name
     .replace(/[-_]/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// ── Main publish pipeline ─────────────────────────────────────
+function stripImages(text) {
+  return text
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/<img[^>]*>/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
 
-export async function publish(inputPath, cwd) {
-  // Validate input exists
-  const resolved = path.resolve(inputPath);
-  try {
-    await fs.access(resolved);
-  } catch {
-    console.error(`Error: Not found: ${resolved}`);
-    process.exit(1);
+export async function publish(inputPath) {
+  const filePath = path.resolve(inputPath);
+  const ext = path.extname(filePath).toLowerCase();
+  if (![".md", ".markdown", ".txt"].includes(ext)) {
+    throw new Error("File must be .md or .txt");
   }
 
-  // Resolve markdown file and source directory
-  const { markdownPath, sourceDir } = await resolveInput(resolved);
+  const baseName = path.basename(filePath, ext);
+  const raw = await fs.readFile(filePath, "utf-8");
 
-  // Find project config
-  const { config, projectRoot } = await getConfig(cwd);
-  const postsDir = path.resolve(projectRoot, config.postsDir || "posts");
+  const post = {
+    title: title(baseName),
+    slug: slug(baseName),
+    content: stripImages(raw),
+    date: new Date().toISOString().split("T")[0],
+  };
+
+  const gitRoot = await findGitRoot(process.cwd());
+  const postsDir = path.join(gitRoot, "posts");
   await fs.mkdir(postsDir, { recursive: true });
 
-  // Generate title and slug
-  const title = titleFromFilename(markdownPath);
-  const slug = slugFromFilename(markdownPath);
-  console.log(`Title: ${title}`);
+  await fs.writeFile(
+    path.join(postsDir, `${post.slug}.json`),
+    JSON.stringify(post, null, 2)
+  );
+  console.log(`Saved posts/${post.slug}.json`);
 
-  // Read and convert markdown
-  const raw = await fs.readFile(markdownPath, "utf-8");
-  let html = convertMarkdown(raw);
-  console.log(`Converted markdown`);
+  await updateIndex(postsDir, post);
 
-  // Find and copy images if any exist
-  const images = await findImages(sourceDir);
-  if (images.length > 0) {
-    const copied = await copyImages(images, slug, postsDir);
-    html = rewriteImageUrls(html, slug, images.map((i) => i.name));
-    console.log(`Copied ${copied} image${copied > 1 ? "s" : ""}`);
-  }
+  const result = await commitAndPush(gitRoot, post.slug, post.title);
+  if (result === "pushed") console.log("Pushed to GitHub");
+  else if (result === "committed") console.log("Committed (push failed)");
+  else console.log("Nothing to commit");
+}
 
-  // Save post JSON
-  const post = generatePost(title, slug, html);
-  await savePost(slug, post, postsDir);
-  console.log(`Saved posts/${slug}.json`);
-
-  // Commit and push
-  const result = await commitAndPush(projectRoot, slug, title, config);
-
-  if (result.error === "no_changes") {
-    console.log("No changes to commit.");
-  } else {
-    console.log("Committed");
-    if (result.pushed) {
-      console.log("Pushed to GitHub");
-    } else if (result.error) {
-      console.error(`Push failed: ${result.error}`);
-      console.log("Run manually: git push origin " + (config.branch || "main"));
+async function findGitRoot(startDir) {
+  let dir = startDir;
+  while (true) {
+    try {
+      await fs.access(path.join(dir, ".git"));
+      return dir;
+    } catch {
+      const parent = path.dirname(dir);
+      if (parent === dir) throw new Error("Not inside a git repo");
+      dir = parent;
     }
   }
+}
 
-  return { slug, title, postsDir, projectRoot };
+async function updateIndex(postsDir, post) {
+  const indexFile = path.join(postsDir, "index.json");
+  let posts = [];
+  try {
+    posts = JSON.parse(await fs.readFile(indexFile, "utf-8"));
+  } catch {}
+  posts = posts.filter((p) => p.slug !== post.slug);
+  posts.unshift({ title: post.title, slug: post.slug, date: post.date });
+  await fs.writeFile(indexFile, JSON.stringify(posts, null, 2));
 }

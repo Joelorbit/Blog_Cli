@@ -421,7 +421,7 @@
       <span></span> Open source · MIT License
     </div>
     <h1>Publish posts<br>from your <em>terminal</em></h1>
-    <p>Write markdown, run one command, your post is live. No server, no database, no dashboards.</p>
+    <p>Write a post, run one command, it's on GitHub. No config, no init.</p>
     <div class="hero-btns">
       <a href="https://github.com/Joelorbit/Blog_Cli" target="_blank" class="btn-primary">Get Started</a>
       <a href="https://github.com/Joelorbit/Blog_Cli#readme" target="_blank" class="btn-secondary">Read Docs</a>
@@ -436,9 +436,7 @@
         </div>
         <div class="terminal-body">
           <span class="prompt">$</span> <span class="cmd">blog publish</span> <span class="path">~/notes/my-post.md</span><br>
-          <span class="output">Title: My Post</span><br>
-          <span class="output">Converted markdown</span><br>
-          <span class="output">Copied 2 images</span><br>
+          <span class="output">Saved posts/my-post.json</span><br>
           <span class="success">✓ Pushed to GitHub</span>
         </div>
       </div>
@@ -449,28 +447,28 @@
   <div class="section" id="features">
     <div class="section-label">Features</div>
     <div class="section-title">Everything you need.<br>Nothing you don't.</div>
-    <div class="section-desc">One dependency. Plain Node.js. Your posts are just JSON files in a git repo.</div>
+    <div class="section-desc">Zero dependencies. Plain Node.js. Your posts are just JSON files in a git repo.</div>
 
     <div class="features">
       <div class="feature">
         <div class="feature-icon"><span class="material-symbols-outlined">edit_note</span></div>
-        <h3>Markdown in, HTML out</h3>
-        <p>Write in plain .md files. GitHub Flavored Markdown — tables, task lists, strikethrough.</p>
+        <h3>Text only, no fluff</h3>
+        <p>Reads .md and .txt files. Strips images, keeps your words. Clean JSON output.</p>
       </div>
       <div class="feature">
         <div class="feature-icon"><span class="material-symbols-outlined">bolt</span></div>
         <h3>One command</h3>
-        <p>blog publish my-post.md — converts, saves, commits, and pushes. Done in seconds.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon"><span class="material-symbols-outlined">image</span></div>
-        <h3>Images built in</h3>
-        <p>Drop images next to your markdown. Copied and URLs rewritten automatically.</p>
+        <p>blog publish my-post.md — saves, commits, and pushes. Done in seconds.</p>
       </div>
       <div class="feature">
         <div class="feature-icon"><span class="material-symbols-outlined">lock_open</span></div>
-        <h3>No lock-in</h3>
-        <p>Plain JSON in a git repo. Move to any hosting, any framework, any time.</p>
+        <h3>No setup</h3>
+        <p>No init, no config files. Install, write, publish. That's it.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon"><span class="material-symbols-outlined">group</span></div>
+        <h3>Fork and use</h3>
+        <p>Clone it, change the name, make it yours. Plain Node.js, zero dependencies.</p>
       </div>
     </div>
   </div>
@@ -484,12 +482,12 @@
       <div class="how-card">
         <div class="how-num">01</div>
         <h3>Write</h3>
-        <p>Create any .md file. Add images in the same folder.</p>
+        <p>Create any .md or .txt file.</p>
       </div>
       <div class="how-card">
         <div class="how-num">02</div>
         <h3>Publish</h3>
-        <p>Run blog publish. It converts, copies images, commits, and pushes.</p>
+        <p>Run blog publish. Saves JSON, commits, and pushes to GitHub.</p>
       </div>
       <div class="how-card">
         <div class="how-num">03</div>
@@ -502,7 +500,7 @@
   <!-- Big CTA -->
   <div class="big-cta">
     <h2>Start blogging today</h2>
-    <p>Clone the repo, run npm install, and publish your first post.</p>
+    <p>Clone, install, publish. No config, no init, no hassle.</p>
     <a href="https://github.com/Joelorbit/Blog_Cli" target="_blank" class="btn-primary">View on GitHub →</a>
   </div>
 
