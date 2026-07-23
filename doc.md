@@ -6,7 +6,7 @@ This document explains the whole codebase, file by file, so you can understand a
 
 ## The big picture
 
-Everything lives in **one repo** (`Joelorbit/Blog_Cli`): the CLI code, and the published posts in `posts/`. When you run `node cli.js publish my-note.md`, this happens:
+Everything lives in **one repo**: the CLI code, and (after you run `blog init`) the published posts in `posts/`. When you run `node cli.js publish my-note.md`, this happens:
 
 ```
 cli.js  →  src/publish.js  →  src/markdown.js  (markdown → HTML)
@@ -25,13 +25,13 @@ One entry point, one pipeline, four small helpers. Each file does exactly one jo
 {
   "name": "blog-cli",
   "type": "module",
-  "bin": { "blog": "./cli.js", "publish": "./cli.js" },
+  "bin": { "blog": "./cli.js" },
   "dependencies": { "marked": "^15.0.0" }
 }
 ```
 
 - `"type": "module"` — lets us use modern `import`/`export` syntax instead of the older `require()`.
-- `"bin"` — this is what makes the **global commands** work. After you run `npm link` once, both `publish` and `blog` become real commands you can type from ANY folder — no `cd`, no `node cli.js`. Both names point to the same file, `cli.js`.
+- `"bin"` — this is what makes the **global command** work. After you run `npm link` once, `blog` becomes a real command you can type from ANY folder — no `cd`, no `node cli.js`.
 - `"dependencies"` — the only outside library is **marked**, a popular markdown-to-HTML converter. Everything else is plain Node.js.
 
 ---
@@ -40,46 +40,67 @@ One entry point, one pipeline, four small helpers. Each file does exactly one jo
 
 This is the file Node runs first. Its only job: figure out what you asked for and hand off the work.
 
+### Parsing arguments
+
 ```js
 const args = process.argv.slice(2);
 ```
-- `process.argv` is the full command line as an array. For `publish note.md` it is `["node", "/path/to/cli.js", "note.md"]`.
-- `.slice(2)` throws away the first two entries (the node binary and the script path), leaving just what *you* typed: `["note.md"]`.
+- `process.argv` is the full command line as an array. For `blog publish note.md` it is `["node", "/path/to/cli.js", "publish", "note.md"]`.
+- `.slice(2)` throws away the first two entries (the node binary and the script path), leaving just what *you* typed: `["publish", "note.md"]`.
+
+### The help text
 
 ```js
 if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
-  console.log(` ...usage text... `);
+  console.log(HELP);
   process.exit(0);
 }
 ```
 - No arguments, or `--help`? Print the help text and stop. `process.exit(0)` means "quit successfully" (exit code 0 = success in the terminal world).
 
-```js
-let filePath;
-if (args[0] === "publish") {
-  filePath = args[1];
-  if (!filePath) { ...error... process.exit(1); }
-} else if (!args[0].startsWith("-")) {
-  filePath = args[0];
-} else {
-  console.error(`Unknown option: ${args[0]}`);
-  process.exit(1);
-}
-```
-- This is what makes **both styles** work:
-  - `publish note.md` → first argument isn't the word "publish" and isn't a flag → treat it as the file directly.
-  - `blog publish note.md` → first argument IS "publish" → the file is the second argument.
-- Anything starting with `-` that isn't `--help` is an unknown flag → error. `process.exit(1)` — exit code 1 means "something went wrong".
+### Parsing flags and positional args
 
 ```js
-try {
-  await publish(filePath);
-} catch (e) {
-  console.error(`Error: ${e.message}`);
-  process.exit(1);
+function parseFlags(args) {
+  const flags = {};
+  const positional = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--repo" && args[i + 1]) {
+      flags.repo = args[i + 1];
+      i++;
+    } else if (args[i] === "--branch" && args[i + 1]) {
+      flags.branch = args[i + 1];
+      i++;
+    } else {
+      positional.push(args[i]);
+    }
+  }
+  return { flags, positional };
 }
 ```
-- Call the pipeline. If *anything* inside throws an error, we catch it here, print a clean one-line message instead of a scary stack trace, and exit with failure.
+- Walks through args one by one. If it sees `--repo` or `--branch`, it grabs the next argument as the value and skips it (`i++`). Everything else goes into `positional`.
+- Example: `blog init --repo URL --branch dev` → `flags = { repo: "URL", branch: "dev" }`, `positional = ["init"]`.
+
+### Dispatching commands
+
+```js
+const { flags, positional } = parseFlags(args);
+const command = positional[0];
+
+if (command === "init") {
+  await init(cwd, flags.repo);
+} else if (command === "publish") {
+  const filePath = positional[1];
+  await publish(filePath, cwd);
+} else if (command === "list") {
+  await list(cwd);
+}
+```
+- `command` is the first positional arg (`init`, `publish`, or `list`).
+- For `init`: passes `flags.repo` (the `--repo` value) to the init function.
+- For `publish`: the file path is the second positional arg.
+- For `list`: just needs the current working directory.
+- Unknown commands hit the `else` block and print an error.
 
 ---
 
@@ -196,37 +217,101 @@ export function generatePost(title, slug, content) {
 
 ---
 
-## 6. `src/storage.js` — writing the JSON files
+## 6. `src/storage.js` — writing the JSON files and finding config
 
-### Finding the project root
+This file does two jobs: **finds where your blog lives** (by looking for `blog.json`) and **writes the post files**.
 
-```js
-export const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-```
-- `import.meta.url` is the location of `storage.js` itself. Two `dirname` calls walk up: `src/storage.js` → `src/` → project root.
-- Why? So `node cli.js publish ...` works **no matter which folder you run it from** — posts always land in the right place.
-
-### The layout, defined in two constants
+### Finding the config: `findConfig(startDir)`
 
 ```js
-const POSTS_DIR  = path.join(ROOT, "posts");          // one file per post
-const INDEX_FILE = path.join(POSTS_DIR, "index.json"); // the list of all posts
+export async function findConfig(startDir) {
+  let dir = startDir;
+  while (true) {
+    const configPath = path.join(dir, CONFIG_FILE);
+    try {
+      await fs.access(configPath);
+      const raw = await fs.readFile(configPath, "utf-8");
+      const config = JSON.parse(raw);
+      return { config, projectRoot: dir };
+    } catch {
+      // no config here, go up
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) break; // reached filesystem root
+    dir = parent;
+  }
+  return null;
+}
 ```
+- Starts at your current directory and walks **up** looking for `blog.json`.
+- Returns the config object and the directory where it was found (`projectRoot`).
+- If it reaches the filesystem root without finding one, returns `null`.
 
-### `savePost(slug, post)`
+### `getConfig(cwd)` — wraps findConfig with defaults
 
 ```js
-await fs.mkdir(POSTS_DIR, { recursive: true });
+export async function getConfig(cwd) {
+  const found = await findConfig(cwd);
+  if (found) return found;
+  return {
+    config: { postsDir: "posts" },
+    projectRoot: cwd,
+  };
+}
 ```
-- Makes sure `posts/` exists. `recursive: true` = create parents too, and don't error if it's already there.
+- If no `blog.json` found, falls back to using the current directory with `postsDir: "posts"`.
+- This is why `blog publish` works even without running `init` first — it just puts posts in `./posts/`.
+
+### `initProject(projectRoot, remoteUrl)` — creates files for a new blog
 
 ```js
-const postFile = path.join(POSTS_DIR, `${slug}.json`);
-await fs.writeFile(postFile, JSON.stringify(post, null, 2));
+export async function initProject(projectRoot, remoteUrl) {
+  const postsDir = path.join(projectRoot, "posts");
+  await fs.mkdir(postsDir, { recursive: true });
+
+  const indexFile = path.join(postsDir, "index.json");
+  try {
+    await fs.access(indexFile);
+  } catch {
+    await fs.writeFile(indexFile, "[]");
+  }
+
+  const configPath = path.join(projectRoot, CONFIG_FILE);
+  try {
+    await fs.access(configPath);
+  } catch {
+    const config = {
+      postsDir: "posts",
+      remote: remoteUrl || "",
+      branch: "main",
+    };
+    await fs.writeFile(configPath, JSON.stringify(config, null, 2) + "\n");
+  }
+  return { postsDir, configPath };
+}
 ```
+- Creates `posts/` if it doesn't exist.
+- Creates `index.json` inside it (empty array `[]`) if it doesn't exist.
+- Creates `blog.json` with the user's repo URL, but **only if one doesn't already exist** (won't overwrite).
+
+### `savePost(slug, post, postsDir)` — writes the JSON files
+
+```js
+export async function savePost(slug, post, postsDir) {
+  await fs.mkdir(postsDir, { recursive: true });
+
+  const postFile = path.join(postsDir, `${slug}.json`);
+  await fs.writeFile(postFile, JSON.stringify(post, null, 2));
+
+  const indexFile = path.join(postsDir, "index.json");
+  await updateIndex(slug, post, indexFile);
+}
+```
+- Takes `postsDir` as a parameter (not a module constant) — this is how it works with any config.
 - Writes the full post to `posts/<slug>.json`. `JSON.stringify(obj, null, 2)` = pretty-print with 2-space indentation so it's readable on GitHub.
+- Then calls `updateIndex` to keep the index in sync.
 
-### `updateIndex(slug, newPost)` — keeping `posts/index.json` correct
+### `updateIndex(slug, newPost, indexFile)` — keeping `posts/index.json` correct
 
 ```js
 try {
@@ -252,12 +337,15 @@ posts.unshift({ title: newPost.title, slug: newPost.slug, date: newPost.date });
 
 ## 7. `src/git.js` — commit and push
 
-This file talks to git by running real git commands with `execSync` (run a shell command and wait for it). All commands run at the project `ROOT`.
+This file talks to git by running real git commands with `execSync` (run a shell command and wait for it). All commands run at the project root.
+
+### The main function: `commitAndPush(projectRoot, slug, title, config)`
 
 ```js
-const REMOTE_URL = "https://github.com/Joelorbit/Blog_Cli.git";
+const remote = config.remote || "origin";
+const branch = config.branch || "main";
 ```
-- The one repo everything pushes to. Change this constant if you ever move the blog.
+- Reads remote URL and branch from `blog.json` config. Falls back to `"origin"` and `"main"` if not set.
 
 ### Safety net: is this even a git repo?
 
@@ -271,6 +359,24 @@ try {
 }
 ```
 - If there's no `.git` folder, create the repo and set a commit identity so commits don't fail on a fresh machine.
+
+### Ensure the configured remote exists
+
+```js
+if (config.remote) {
+  let hasRemote = false;
+  try {
+    execSync("git remote get-url origin", { cwd, stdio: "pipe" });
+    hasRemote = true;
+  } catch {
+    // no remote yet
+  }
+  if (!hasRemote) {
+    execSync(`git remote add origin ${config.remote}`, { cwd });
+  }
+}
+```
+- Only adds the remote if the user configured one in `blog.json`. If `config.remote` is empty, it skips this — assumes you already have an `origin` set up.
 
 ### Stage and commit
 
@@ -286,37 +392,177 @@ try {
 - `git commit` fails when there is nothing to commit — we use that: catching the failure is how we detect "you published the exact same file twice".
 - Commit messages always look like `blog: My First Post`, so blog commits are easy to spot in history.
 
-### Make sure the remote exists
-
-```js
-try {
-  execSync("git remote get-url origin", { cwd, stdio: "pipe" });
-} catch {
-  execSync(`git remote add origin ${REMOTE_URL}`, { cwd });
-}
-```
-- Asks git "is there an `origin` remote?" (`stdio: "pipe"` captures output quietly). If not, it's added automatically — one less thing to set up.
-
 ### Push
 
 ```js
 try {
-  execSync("git push origin main", ...);
+  execSync(`git push -u origin ${branch}`, { cwd, stdio: "pipe" });
   return { pushed: true };
-} catch {
+} catch (e) {
+  return { pushed: false, error: e.message };
+}
+```
+- Uses `-u` to link the local branch with the remote branch. If it fails (no internet, no permission), reports the error — the commit is still safe locally.
+- Uses the `branch` from config, so it works with non-default branch names.
+
+### Helper: `setupRemote(projectRoot, remoteUrl)` — used by init.js
+
+```js
+export async function setupRemote(projectRoot, remoteUrl) {
+  let existing = null;
   try {
-    execSync("git push -u origin main", ...);   // first-ever push needs -u
-    return { pushed: true };
-  } catch (e) {
-    return { pushed: false, error: e.message };
+    existing = execSync("git remote get-url origin", { ... }).trim();
+  } catch {
+    // no remote
+  }
+
+  if (existing) {
+    if (existing === remoteUrl) return "already_set";
+    execSync(`git remote set-url origin ${remoteUrl}`, { cwd: projectRoot });
+    return "updated";
+  }
+
+  execSync(`git remote add origin ${remoteUrl}`, { cwd: projectRoot });
+  return "added";
+}
+```
+- Returns a string describing what happened: `"added"`, `"updated"`, or `"already_set"`.
+- Called by `init.js` when the user runs `blog init --repo <url>`.
+
+### Helper: `getRemoteUrl(projectRoot)` — reads the current remote
+
+```js
+export async function getRemoteUrl(projectRoot) {
+  try {
+    const url = execSync("git remote get-url origin", {
+      cwd: projectRoot,
+      encoding: "utf-8",
+      stdio: "pipe",
+    }).trim();
+    return url;
+  } catch {
+    return null;
   }
 }
 ```
-- Normal push first; if that fails, retry with `-u` (needed the very first time a branch is pushed, to link local `main` with GitHub's `main`). If both fail (no internet, no permission), report the error — the commit is still safe locally.
+- Returns the current `origin` URL, or `null` if no remote is configured.
+- Used by `init.js` to detect existing remotes.
 
 ---
 
-## 8. `posts/` — the output (what your website fetches)
+## 8. `src/init.js` — setting up a new blog project
+
+This runs when you type `blog init --repo <url>`. It does three things: creates files, sets up git, configures the remote.
+
+### Check if already initialized
+
+```js
+const existing = await getConfig(cwd);
+if (existing.config && existing.projectRoot !== cwd) {
+  console.log(`Already initialized at: ${existing.projectRoot}`);
+  return;
+}
+```
+- Calls `getConfig()` from storage.js (which walks up directories looking for `blog.json`).
+- If a `blog.json` already exists **above** the current directory, it tells you and stops — no double-init.
+
+### Create the files
+
+```js
+const { postsDir, configPath } = await initProject(cwd, remoteUrl);
+```
+- This calls `initProject()` in storage.js, which:
+  1. Creates `posts/` folder (with `index.json` inside if it doesn't exist)
+  2. Creates `blog.json` with your repo URL, branch, and postsDir
+
+### Set up git
+
+```js
+try {
+  await fs.access(path.join(cwd, ".git"));
+} catch {
+  execSync("git init", { cwd });
+  execSync("git config user.email 'blog@local'", { cwd });
+  execSync("git config user.name 'blog'", { cwd });
+}
+```
+- If there's no `.git` folder, initialize a fresh repo and set a dummy commit identity (so commits don't fail on a fresh machine).
+
+### Configure the remote
+
+```js
+if (remoteUrl) {
+  const result = await setupRemote(cwd, remoteUrl);
+}
+```
+- Calls `setupRemote()` from git.js, which either adds a new `origin` remote or updates the existing one.
+- If no `--repo` flag was given, it checks for an existing remote and tells you what it found.
+
+---
+
+## 9. `src/list.js` — showing published posts
+
+Simple file. Reads `posts/index.json` and prints it.
+
+```js
+export async function list(cwd) {
+  const postsDir = await getPostsDir(cwd);
+  const indexFile = path.join(postsDir, "index.json");
+
+  let posts = [];
+  try {
+    const data = await fs.readFile(indexFile, "utf-8");
+    posts = JSON.parse(data);
+  } catch {
+    console.log("No posts found.");
+    return;
+  }
+```
+- `getPostsDir()` (from storage.js) finds where `posts/` lives by looking for `blog.json`.
+- If `index.json` doesn't exist yet (no posts published), it catches the error and prints a friendly message.
+
+```js
+  for (const post of posts) {
+    console.log(`  ${post.date}  ${post.title}  [${post.slug}]`);
+  }
+```
+- Loops through the index and prints each post with its date, title, and slug.
+- The index is ordered newest-first (because `storage.js` uses `unshift`), so the latest post appears at the top.
+
+---
+
+## 10. `blog.json` — your config file
+
+This is the per-user config. Created by `blog init`, lives in your project root.
+
+```json
+{
+  "postsDir": "posts",
+  "remote": "https://github.com/you/your-blog.git",
+  "branch": "main"
+}
+```
+
+- **`postsDir`** — where to save posts. Default is `"posts"`. You can change this if you want posts somewhere else.
+- **`remote`** — your GitHub repo URL. Used by git.js to add/update the `origin` remote. If empty, git.js falls back to whatever `origin` is already set to.
+- **`branch`** — which branch to push to. Default is `"main"`.
+
+### How config is found
+
+`storage.js` has a `findConfig()` function that walks **up** from your current directory looking for `blog.json`:
+
+```
+/home/you/my-blog/posts/drafts/   ← you are here
+/home/you/my-blog/                ← checks here → finds blog.json ✓
+```
+
+This means you can run `blog publish` from any subfolder and it still works — it finds the config above you.
+
+If no `blog.json` is found anywhere, it falls back to using the current directory with `postsDir: "posts"`.
+
+---
+
+## 11. `posts/` — the output (what your website fetches)
 
 ```
 posts/
@@ -324,14 +570,14 @@ posts/
   <slug>.json     ← { title, slug, content (HTML), date }
 ```
 
-Your website never runs this code — it just fetches these files raw from GitHub:
+Your website never runs this code — it just fetches these files raw from GitHub using **your** repo URL:
 
-- List: `https://raw.githubusercontent.com/Joelorbit/Blog_Cli/main/posts/index.json`
-- Post: `https://raw.githubusercontent.com/Joelorbit/Blog_Cli/main/posts/<slug>.json`
+- List: `https://raw.githubusercontent.com/YOU/REPO/main/posts/index.json`
+- Post: `https://raw.githubusercontent.com/YOU/REPO/main/posts/<slug>.json`
 
 ---
 
-## 9. `.gitignore`
+## 12. `.gitignore`
 
 ```
 node_modules/   ← installed dependencies; recreated anytime with `npm install`

@@ -1,96 +1,170 @@
-# Blog CLI + Content
+# blog-cli
 
-One repo for everything: the CLI code lives here, and every post you publish lands in the **`posts/`** folder. Your website fetches posts straight from this repo — no server, no database.
+Publish markdown files as blog posts from your terminal. No server, no database — just markdown, JSON, and git.
 
-## Requirements
+## Prerequisites
 
-- Node.js 18 or newer
-- Git configured with access to this repo
+- **Node.js 18+** — check with `node -v`
+- **Git** — check with `git --version`
+- **A GitHub repo** — create an empty one for your blog (e.g. `your-blog`)
 
-## Setup (one time)
+## Install
 
 ```bash
 git clone https://github.com/Joelorbit/Blog_Cli.git
 cd Blog_Cli
 npm install
-npm link     # makes the `publish` command work from ANY folder
+npm link
 ```
 
-## How to publish a post
+`npm link` makes the `blog` command available globally on your machine.
 
-1. Write a markdown file anywhere, e.g. `~/Desktop/my-first-post.md`
-2. From **any** folder, run:
+## Quick start
 
 ```bash
-publish ~/Desktop/my-first-post.md
+# 1. Go to your portfolio/blog project folder
+cd /path/to/your/portfolio
+
+# 2. Initialize — creates posts/, blog.json, configures your repo
+blog init --repo https://github.com/you/your-blog.git
+
+# 3. Write a markdown file (or use an existing one)
+echo "# Hello World\n\nMy first post!" > ~/my-first-post.md
+
+# 4. Publish it — converts to HTML, saves JSON, commits, pushes
+blog publish ~/my-first-post.md
+
+# 5. See your posts
+blog list
 ```
 
-You will see:
+Each user runs `blog init` with **their own** repo URL. The CLI writes a local `blog.json` with that URL — your posts never touch anyone else's repo.
+
+## How it works
 
 ```
-Reading file...
-Generated title: My First Post
-Converted markdown
-Created JSON
-Committed changes
-Pushed to GitHub
-
-Published successfully
+your markdown file
+        |
+        v
+  [blog publish]  ----->  posts/
+        |                  index.json     (list of all posts)
+        v                  <slug>.json    (one file per post)
+   git commit + push
 ```
 
-Done. The post is live in this repo under `posts/`.
+Your website fetches posts straight from the `posts/` folder — either locally or from GitHub via raw URL.
 
-## Rules to know
+## Commands
 
-- **The filename becomes the title.** `my-first-post.md` → "My First Post"
-- **Accepted file types:** `.md`, `.markdown`, `.txt`
-- **Publishing the same filename again updates that post** (same slug, new content).
-- Publishing only ever commits the `posts/` folder — it never touches your code.
-- All of these do the same thing: `publish note.md`, `blog note.md`, `blog publish note.md`, `node cli.js publish note.md`
-- Get help anytime: `publish --help`
+| Command | What it does |
+| --- | --- |
+| `blog init --repo <url>` | Creates `posts/`, `blog.json`, and configures git remote |
+| `blog init --repo <url> --branch <name>` | Same, but pushes to a specific branch (default: `main`) |
+| `blog publish <file.md>` | Converts markdown to HTML, saves JSON, commits and pushes |
+| `blog list` | Shows all published posts with dates |
+| `blog --help` | Shows usage info |
 
-## Repo structure
+## Config
 
+`blog.json` lives in **your** project root (not shared with other users):
+
+```json
+{
+  "postsDir": "posts",
+  "remote": "https://github.com/you/your-blog.git",
+  "branch": "main"
+}
 ```
-cli.js               ← the command you run
-src/                 ← the code (see doc.md for a full walkthrough)
-posts/               ← ★ your published posts — your website fetches THIS
-  index.json         ← list of all posts (title, slug, date) — newest first
-  my-first-post.json ← one file per post, full HTML content
-```
 
-## Post JSON format
+- `postsDir` — where to save posts (default: `posts`)
+- `remote` — your GitHub repo URL (optional, for push)
+- `branch` — branch to push to (default: `main`)
+
+The CLI searches up from your current directory to find this file. If none exists, it falls back to a `posts/` folder in the current directory.
+
+## Open source workflow
+
+1. Someone clones this repo
+2. They run `blog init --repo https://github.com/THEM/THEIR-BLOG.git`
+3. A local `blog.json` is created with **their** repo URL
+4. `blog publish note.md` saves to their `posts/` and pushes to **their** repo
+5. Their website fetches from `posts/` via GitHub raw URL
+
+Each user has their own config. Nothing is hardcoded to one person's repo.
+
+## Post format
+
+Each post is saved as `posts/<slug>.json`:
 
 ```json
 {
   "title": "My First Post",
   "slug": "my-first-post",
-  "content": "<p>HTML content</p>",
+  "content": "<p>HTML content here</p>",
   "date": "2026-07-19"
 }
 ```
 
-## Fetching posts from your website
+The index (`posts/index.json`) holds all posts without content for cheap listing:
 
-```javascript
-// Get the list of all posts
-const res = await fetch("https://raw.githubusercontent.com/Joelorbit/Blog_Cli/main/posts/index.json");
-const posts = await res.json();
-
-// Get one full post by slug
-const post = await fetch(`https://raw.githubusercontent.com/Joelorbit/Blog_Cli/main/posts/${slug}.json`);
+```json
+[
+  { "title": "My First Post", "slug": "my-first-post", "date": "2026-07-19" }
+]
 ```
 
-## Project files
+## Fetching from your website
 
-| File | What it is |
-| --- | --- |
-| `cli.js` | Entry point — reads your command and runs it |
-| `src/publish.js` | The publish pipeline, step by step |
-| `src/markdown.js` | Converts markdown → HTML |
-| `src/post.js` | Builds the post object (title, slug, content, date) |
-| `src/storage.js` | Writes the JSON files into `posts/` |
-| `src/git.js` | Commits `posts/` and pushes to GitHub |
-| `posts/` | Your published posts (what your website fetches) |
+Replace `YOU/REPO` with your GitHub username and repo name:
 
-Want to understand how every line of code works? Read **[doc.md](doc.md)**.
+```javascript
+// List all posts
+const res = await fetch("https://raw.githubusercontent.com/YOU/REPO/main/posts/index.json");
+const posts = await res.json();
+
+// Get one post by slug
+const slug = "my-first-post";
+const post = await fetch(`https://raw.githubusercontent.com/YOU/REPO/main/posts/${slug}.json`);
+const data = await post.json();
+// data.title, data.content (HTML), data.date
+```
+
+The `posts/` folder in your repo is the only thing your website needs. No server, no database — just raw JSON files on GitHub.
+
+## Rules
+
+- Filename becomes the title: `my-post.md` becomes "My Post"
+- Accepted extensions: `.md`, `.markdown`, `.txt`
+- Re-publishing same filename updates the post (same slug, new content)
+- Only `posts/` is committed — your code files are never touched
+
+## Edit or delete a post
+
+**Edit:** change your original markdown file and run `blog publish` on it again. Same filename = same slug = post is replaced.
+
+**Delete:** remove the JSON file and its entry from the index, then commit:
+
+```bash
+rm posts/my-post.json
+# remove the entry for "my-post" from posts/index.json
+git add posts/ && git commit -m "blog: remove my-post" && git push
+```
+
+## Project structure
+
+```
+cli.js              Entry point
+src/
+  init.js           Sets up blog.json, posts/, and git remote
+  publish.js        The publish pipeline
+  markdown.js       Converts markdown to HTML (uses marked)
+  post.js           Builds the post object
+  storage.js        Writes JSON files, manages config
+  git.js            Commits and pushes using config
+  list.js           Lists posts from index
+posts/              Published posts (what your website fetches)
+```
+
+## License
+
+MIT
