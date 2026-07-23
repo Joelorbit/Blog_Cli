@@ -1,0 +1,6 @@
+{
+  "title": "Test Post",
+  "slug": "test-post",
+  "content": "# Hello World\n\nThis is my first post using blog-cli.\n\n## Section\n\nSome text here.",
+  "date": "2026-07-23"
+}
