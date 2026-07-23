@@ -20,6 +20,12 @@ export async function commitAndPush(cwd, slug, title) {
   execSync("git add posts/", { cwd });
 
   try {
+    execSync(`git commit -m "Add post: ${title}"`, { cwd, stdio: "pipe" });
+  } catch {
+    return "nothing";
+  }
+
+  try {
     const branch = execSync("git branch --show-current", {
       cwd,
       encoding: "utf-8",
