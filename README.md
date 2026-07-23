@@ -3,7 +3,7 @@
 Publish markdown posts to GitHub from your terminal. No server. No database. No dashboard.
 
 ```bash
-blog publish my-post.md
+publish my-post.md
 ```
 
 That's the whole tool.
@@ -13,7 +13,7 @@ That's the whole tool.
 ## How it works
 
 1. Write a `.md` or `.txt` file
-2. Run `blog publish` — strips images, saves as JSON
+2. Run `publish` — strips images, saves as JSON
 3. Commits and pushes to GitHub
 4. Your website fetches the JSON from GitHub raw URLs
 
@@ -35,10 +35,10 @@ cd Blog_Cli
 npm link
 ```
 
-`npm link` makes the `blog` command available globally. Verify:
+`npm link` makes the `publish` command available globally. Verify:
 
 ```bash
-blog --help
+publish --help
 ```
 
 ---
@@ -59,7 +59,7 @@ blog --help
 Write a markdown file anywhere, then publish:
 
 ```bash
-blog publish ~/my-post.md
+publish ~/my-post.md
 ```
 
 The tool:

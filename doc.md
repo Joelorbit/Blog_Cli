@@ -6,7 +6,7 @@ This document explains the whole codebase, file by file. Read it top to bottom �
 
 ## The big picture
 
-Everything lives in **one repo**: the CLI code, and (after you publish) the posts in `posts/`. When you run `blog publish my-note.md`, this happens:
+Everything lives in **one repo**: the CLI code, and (after you publish) the posts in `posts/`. When you run `publish my-note.md`, this happens:
 
 ```
 cli.js  →  src/publish.js  →  read file, strip images, save JSON
@@ -23,12 +23,12 @@ Three files total. Each does one job.
 {
   "name": "blog-cli",
   "type": "module",
-  "bin": { "blog": "./cli.js" }
+  "bin": { "publish": "./cli.js" }
 }
 ```
 
 - `"type": "module"` — modern `import`/`export` syntax.
-- `"bin"` — makes `blog` a global command after `npm link`.
+- `"bin"` — makes `publish` a global command after `npm link`.
 - **Zero dependencies.** Everything is plain Node.js.
 
 ---
@@ -41,15 +41,14 @@ Runs first. Figures out what you asked for and hands off work.
 const args = process.argv.slice(2);
 ```
 
-For `blog publish note.md` this gives `["publish", "note.md"]`.
+For `publish note.md` this gives `["note.md"]`.
 
 ```js
-if (args[0] === "publish") {
-  await publish(target);
-}
+const target = args[0];
+await publish(target);
 ```
 
-One command: `publish`. That's it.
+First arg is the file path. That's it.
 
 ---
 

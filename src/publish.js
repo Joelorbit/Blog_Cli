@@ -1,6 +1,12 @@
-import fs from "fs/promises";
+import fs from "fs";
+import fsp from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
 import { commitAndPush } from "./git.js";
+
+const scriptDir = path.dirname(
+  fs.realpathSync(fileURLToPath(import.meta.url))
+);
 
 function slug(name) {
   return name
@@ -31,7 +37,7 @@ export async function publish(inputPath) {
   }
 
   const baseName = path.basename(filePath, ext);
-  const raw = await fs.readFile(filePath, "utf-8");
+  const raw = await fsp.readFile(filePath, "utf-8");
 
   const post = {
     title: title(baseName),
@@ -40,11 +46,11 @@ export async function publish(inputPath) {
     date: new Date().toISOString().split("T")[0],
   };
 
-  const gitRoot = await findGitRoot(process.cwd());
+  const gitRoot = await findGitRoot();
   const postsDir = path.join(gitRoot, "posts");
-  await fs.mkdir(postsDir, { recursive: true });
+  await fsp.mkdir(postsDir, { recursive: true });
 
-  await fs.writeFile(
+  await fsp.writeFile(
     path.join(postsDir, `${post.slug}.json`),
     JSON.stringify(post, null, 2)
   );
@@ -58,15 +64,15 @@ export async function publish(inputPath) {
   else console.log("Nothing to commit");
 }
 
-async function findGitRoot(startDir) {
-  let dir = startDir;
+async function findGitRoot() {
+  let dir = scriptDir;
   while (true) {
     try {
-      await fs.access(path.join(dir, ".git"));
+      await fsp.access(path.join(dir, ".git"));
       return dir;
     } catch {
       const parent = path.dirname(dir);
-      if (parent === dir) throw new Error("Not inside a git repo. Run 'blog publish' from inside your blog repo.");
+      if (parent === dir) throw new Error("Not inside a git repo. Run from inside your blog repo.");
       dir = parent;
     }
   }
@@ -76,9 +82,9 @@ async function updateIndex(postsDir, post) {
   const indexFile = path.join(postsDir, "index.json");
   let posts = [];
   try {
-    posts = JSON.parse(await fs.readFile(indexFile, "utf-8"));
+    posts = JSON.parse(await fsp.readFile(indexFile, "utf-8"));
   } catch {}
   posts = posts.filter((p) => p.slug !== post.slug);
   posts.unshift({ title: post.title, slug: post.slug, date: post.date });
-  await fs.writeFile(indexFile, JSON.stringify(posts, null, 2));
+  await fsp.writeFile(indexFile, JSON.stringify(posts, null, 2));
 }
