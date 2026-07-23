@@ -27,7 +27,7 @@ export async function publish(inputPath) {
   const filePath = path.resolve(inputPath);
   const ext = path.extname(filePath).toLowerCase();
   if (![".md", ".markdown", ".txt"].includes(ext)) {
-    throw new Error("File must be .md or .txt");
+    throw new Error("File must be .md, .markdown, or .txt");
   }
 
   const baseName = path.basename(filePath, ext);
@@ -66,7 +66,7 @@ async function findGitRoot(startDir) {
       return dir;
     } catch {
       const parent = path.dirname(dir);
-      if (parent === dir) throw new Error("Not inside a git repo");
+      if (parent === dir) throw new Error("Not inside a git repo. Run 'blog publish' from inside your blog repo.");
       dir = parent;
     }
   }

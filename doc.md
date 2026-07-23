@@ -10,7 +10,7 @@ Everything lives in **one repo**: the CLI code, and (after you publish) the post
 
 ```
 cli.js  →  src/publish.js  →  read file, strip images, save JSON
-                           →  src/git.js  (commit posts/ + push)
+                            →  src/git.js  (commit posts/ + push)
 ```
 
 Three files total. Each does one job.
@@ -105,12 +105,13 @@ Calls `git.js` to stage `posts/`, commit with message `blog: <title>`, and push.
 
 ```js
 execSync("git add posts/", { cwd });
-execSync(`git commit -m "blog: ${title}"`, { cwd, stdio: "pipe" });
+execSync("git commit -m " + JSON.stringify(msg), { cwd, stdio: "pipe" });
 execSync(`git push -u origin ${branch}`, { cwd, stdio: "pipe" });
 ```
 
 - Only stages `posts/` — never accidentally commits your code changes.
 - Auto-detects current branch name.
+- Checks that `git config user.name` and `user.email` are set before committing.
 - Returns `"pushed"`, `"committed"`, or `"nothing"`.
 
 ---
@@ -161,8 +162,11 @@ Delete `posts/<slug>.json`, remove its entry from `posts/index.json`, commit, pu
 **"No changes to commit"?**
 Published same content twice. Nothing to do.
 
+**"Git user.name not set"?**
+Run `git config --global user.name 'Your Name'` and `git config --global user.email 'you@example.com'`.
+
 **Will publish push my code changes?**
 No. Only stages `posts/`.
 
 **Can others use this?**
-Clone → change author in `package.json` → `npm install && npm link` → done.
+Clone → change author in `package.json` → `npm link` → done.
