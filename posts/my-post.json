@@ -1,0 +1,6 @@
+{
+  "title": "My Post",
+  "slug": "my-post",
+  "content": "<h1>My Post\\n\\n<img src=\"./my-post/photo.jpg\" alt=\"photo\"></h1>\n",
+  "date": "2026-07-23"
+}
