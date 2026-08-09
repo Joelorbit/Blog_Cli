@@ -6,7 +6,7 @@ const args = process.argv.slice(2);
 
 if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
   console.log(`
-publish — publish markdown posts to your GitHub blog
+publish — Publish markdown posts to your GitHub blog
 
 Usage:
   publish <file.md>
