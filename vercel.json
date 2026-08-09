@@ -7,12 +7,20 @@
     {
       "src": "favicon.svg",
       "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.png",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.ico",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/favicon.svg",
-      "dest": "/favicon.svg"
+      "src": "/favicon.(svg|png|ico)",
+      "dest": "/favicon.$1"
     },
     {
       "src": "/(.*)",

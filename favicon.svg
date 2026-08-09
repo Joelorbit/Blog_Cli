@@ -1,4 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect x="2" y="2" width="60" height="60" rx="9" fill="#2a2a2a" stroke="#d3d5d0" stroke-opacity="0.14" stroke-width="3"/>
-  <text x="32" y="47" font-family="Outfit, system-ui, sans-serif" font-size="42" font-weight="700" font-style="italic" fill="#a3ae85" text-anchor="middle">b</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="#1f221b" stroke="#a3ae85" stroke-opacity="0.3" stroke-width="2"/>
+  <rect x="10" y="12" width="44" height="40" rx="6" fill="#141612" stroke="#363a30" stroke-width="1.5"/>
+  <line x1="10" y1="23" x2="54" y2="23" stroke="#252920" stroke-width="1"/>
+  <circle cx="17" cy="17.5" r="2.5" fill="#ff5f56"/>
+  <circle cx="24" cy="17.5" r="2.5" fill="#ffbd2e"/>
+  <circle cx="31" cy="17.5" r="2.5" fill="#27c93f"/>
+  <path d="M 18 30 L 25 35 L 18 40" fill="none" stroke="#a3ae85" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="29" y="30" width="10" height="10" rx="1" fill="#c2d685"/>
+  <rect x="37" y="35" width="15" height="17" rx="3" fill="#24281f" stroke="#a3ae85" stroke-width="1.5"/>
+  <line x1="41" y1="40" x2="48" y2="40" stroke="#d3d5d0" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="41" y1="44" x2="47" y2="44" stroke="#a3ae85" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="41" y1="48" x2="45" y2="48" stroke="#a3ae85" stroke-width="1.2" stroke-linecap="round"/>
 </svg>
