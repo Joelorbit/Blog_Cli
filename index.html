@@ -1,664 +1,1223 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>blog-cli — Publish from terminal</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
-  <link rel="shortcut icon" href="favicon.ico">
-  <link rel="apple-touch-icon" href="favicon.png">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    /* ============================================================================
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>blog-cli — Publish from terminal</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="apple-touch-icon" href="favicon.png" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ============================================================================
        TOKENS — EyuTaste contract: painted-wall charcoal, sage cream ink,
        olive moss accent, golden ochre complement. Dark is the default.
        ============================================================================ */
-    :root {
-      color-scheme: dark;
-      --n-50: #d3d5d0;
-      --n-100: #b8bab3;
-      --n-200: #9e9f9a;
-      --n-300: #848580;
-      --n-400: #6b6b67;
-      --n-500: #52534f;
-      --n-600: #3c3c3c;
-      --n-700: #323232;
-      --n-800: #2a2a2a;
-      --n-900: #262626;
-      --n-950: #232323;
-      --n-1000: #1a1a1a;
+      :root {
+        color-scheme: dark;
+        --n-50: #d3d5d0;
+        --n-100: #b8bab3;
+        --n-200: #9e9f9a;
+        --n-300: #848580;
+        --n-400: #6b6b67;
+        --n-500: #52534f;
+        --n-600: #3c3c3c;
+        --n-700: #323232;
+        --n-800: #2a2a2a;
+        --n-900: #262626;
+        --n-950: #232323;
+        --n-1000: #1a1a1a;
 
-      --bg: #232323;
-      --surface: #2a2a2a;
-      --surface-elevated: #323232;
-      --surface-raised: #3c3c3c;
-      --surface-pressed: #1a1a1a;
-      --surface-inset: #1a1a1a;
+        --bg: #232323;
+        --surface: #2a2a2a;
+        --surface-elevated: #323232;
+        --surface-raised: #3c3c3c;
+        --surface-pressed: #1a1a1a;
+        --surface-inset: #1a1a1a;
 
-      --ink: #d3d5d0;
-      --ink-inverse: #232323;
+        --ink: #d3d5d0;
+        --ink-inverse: #232323;
 
-      --text-primary: #d3d5d0;
-      --text-secondary: color-mix(in srgb, #d3d5d0 82%, transparent);
-      --text-muted: color-mix(in srgb, #d3d5d0 68%, transparent);
-      --text-faint: color-mix(in srgb, #d3d5d0 46%, transparent);
-      --text-disabled: color-mix(in srgb, #d3d5d0 42%, transparent);
+        --text-primary: #d3d5d0;
+        --text-secondary: color-mix(in srgb, #d3d5d0 82%, transparent);
+        --text-muted: color-mix(in srgb, #d3d5d0 68%, transparent);
+        --text-faint: color-mix(in srgb, #d3d5d0 46%, transparent);
+        --text-disabled: color-mix(in srgb, #d3d5d0 42%, transparent);
 
-      --line: color-mix(in srgb, #d3d5d0 14%, transparent);
-      --line-strong: color-mix(in srgb, #d3d5d0 28%, transparent);
-      --line-soft: color-mix(in srgb, #d3d5d0 7%, transparent);
-      --card-border: color-mix(in srgb, #d3d5d0 11%, transparent);
+        --line: color-mix(in srgb, #d3d5d0 14%, transparent);
+        --line-strong: color-mix(in srgb, #d3d5d0 28%, transparent);
+        --line-soft: color-mix(in srgb, #d3d5d0 7%, transparent);
+        --card-border: color-mix(in srgb, #d3d5d0 11%, transparent);
 
-      --surface-hover: color-mix(in srgb, #d3d5d0 6%, transparent);
-      --surface-active: color-mix(in srgb, #d3d5d0 11%, transparent);
-      --disabled-bg: color-mix(in srgb, #d3d5d0 6%, transparent);
-      --glow: color-mix(in srgb, #d3d5d0 6%, transparent);
+        --surface-hover: color-mix(in srgb, #d3d5d0 6%, transparent);
+        --surface-active: color-mix(in srgb, #d3d5d0 11%, transparent);
+        --disabled-bg: color-mix(in srgb, #d3d5d0 6%, transparent);
+        --glow: color-mix(in srgb, #d3d5d0 6%, transparent);
 
-      --accent: #5a6237;
-      --accent-strong: #6c7642;
-      --accent-soft: color-mix(in srgb, #5a6237 20%, transparent);
-      --on-accent: #d3d5d0;
-      --accent-text: #a3ae85;
+        --accent: #5a6237;
+        --accent-strong: #6c7642;
+        --accent-soft: color-mix(in srgb, #5a6237 20%, transparent);
+        --on-accent: #d3d5d0;
+        --accent-text: #a3ae85;
 
-      --complement: #b48148;
-      --complement-strong: #c89254;
-      --complement-soft: color-mix(in srgb, #b48148 18%, transparent);
-      --on-complement: #232323;
+        --complement: #b48148;
+        --complement-strong: #c89254;
+        --complement-soft: color-mix(in srgb, #b48148 18%, transparent);
+        --on-complement: #232323;
 
-      --terracotta: #7e5026;
-      --terracotta-soft: color-mix(in srgb, #7e5026 20%, transparent);
+        --terracotta: #7e5026;
+        --terracotta-soft: color-mix(in srgb, #7e5026 20%, transparent);
 
-      --ring: color-mix(in srgb, #5a6237 60%, transparent);
+        --ring: color-mix(in srgb, #5a6237 60%, transparent);
 
-      --success: #5a6237;
-      --warning: #b48148;
-      --danger: #9e4235;
-      --danger-soft: color-mix(in srgb, #9e4235 18%, transparent);
+        --success: #5a6237;
+        --warning: #b48148;
+        --danger: #9e4235;
+        --danger-soft: color-mix(in srgb, #9e4235 18%, transparent);
 
-      --font-display: 'Outfit', system-ui, sans-serif;
-      --font-body: 'Lexend', system-ui, sans-serif;
-      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+        --font-display: "Outfit", system-ui, sans-serif;
+        --font-body: "Lexend", system-ui, sans-serif;
+        --font-mono:
+          "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-      --display-lg: 7.478rem;
-      --display-md: 5.61rem;
-      --display-sm: 4.209rem;
-      --heading-lg: 2.369rem;
-      --heading-md: 1.777rem;
-      --heading-sm: 1.333rem;
-      --body-lg: 1.125rem;
-      --body-md: 1rem;
-      --body-sm: 0.833rem;
-      --body-xs: 0.75rem;
-      --caption: 0.694rem;
-      --mono-md: 0.833rem;
-      --mono-sm: 0.75rem;
-      --mono-xs: 0.694rem;
+        --display-lg: 7.478rem;
+        --display-md: 5.61rem;
+        --display-sm: 4.209rem;
+        --heading-lg: 2.369rem;
+        --heading-md: 1.777rem;
+        --heading-sm: 1.333rem;
+        --body-lg: 1.125rem;
+        --body-md: 1rem;
+        --body-sm: 0.833rem;
+        --body-xs: 0.75rem;
+        --caption: 0.694rem;
+        --mono-md: 0.833rem;
+        --mono-sm: 0.75rem;
+        --mono-xs: 0.694rem;
 
-      --lh-display: 1.05;
-      --lh-heading: 1.18;
-      --lh-body: 1.6;
-      --lh-caption: 1.4;
-      --lh-mono: 1.5;
+        --lh-display: 1.05;
+        --lh-heading: 1.18;
+        --lh-body: 1.6;
+        --lh-caption: 1.4;
+        --lh-mono: 1.5;
 
-      --tracking-display: -0.028em;
-      --tracking-heading: -0.018em;
-      --tracking-body: -0.006em;
-      --tracking-caption: 0.08em;
+        --tracking-display: -0.028em;
+        --tracking-heading: -0.018em;
+        --tracking-body: -0.006em;
+        --tracking-caption: 0.08em;
 
-      --space-1: 0.25rem;
-      --space-2: 0.5rem;
-      --space-3: 0.75rem;
-      --space-4: 1rem;
-      --space-5: 1.5rem;
-      --space-6: 2rem;
-      --space-7: 2.5rem;
-      --space-8: 3rem;
-      --space-9: 4rem;
-      --space-11: 6rem;
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-5: 1.5rem;
+        --space-6: 2rem;
+        --space-7: 2.5rem;
+        --space-8: 3rem;
+        --space-9: 4rem;
+        --space-11: 6rem;
 
-      --radius-sm: 4px;
-      --radius-md: 6px;
-      --radius-lg: 10px;
-      --radius-xl: 16px;
-      --radius-pill: 999px;
+        --radius-sm: 4px;
+        --radius-md: 6px;
+        --radius-lg: 10px;
+        --radius-xl: 16px;
+        --radius-pill: 999px;
 
-      --shadow-1: 0 1px 2px var(--glow), 0 2px 8px var(--glow);
-      --shadow-2: 0 4px 16px var(--glow), 0 12px 40px var(--glow);
-      --shadow-3: 0 8px 24px var(--glow), 0 32px 96px var(--glow);
+        --shadow-1: 0 1px 2px var(--glow), 0 2px 8px var(--glow);
+        --shadow-2: 0 4px 16px var(--glow), 0 12px 40px var(--glow);
+        --shadow-3: 0 8px 24px var(--glow), 0 32px 96px var(--glow);
 
-      --dur-1: 100ms;
-      --dur-2: 160ms;
-      --dur-3: 240ms;
-      --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-      --ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
+        --dur-1: 100ms;
+        --dur-2: 160ms;
+        --dur-3: 240ms;
+        --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+        --ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
 
-      --z-nav: 200;
-      --z-grain: 9999;
-      --container: 1600px;
+        --z-nav: 200;
+        --z-grain: 9999;
+        --container: 1600px;
 
-      --grain-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' seed='42' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)'/%3E%3C/svg%3E");
+        --grain-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' seed='42' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)'/%3E%3C/svg%3E");
 
-      --dot-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='1.2' fill='%23d3d5d0' fill-opacity='0.12'/%3E%3C/svg%3E");
-      --plus-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M14 9v10M9 14h10' fill='none' stroke='%23d3d5d0' stroke-opacity='0.09' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E");
-      --plus-size: 28px;
-    }
+        --dot-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='1.2' fill='%23d3d5d0' fill-opacity='0.12'/%3E%3C/svg%3E");
+        --plus-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M14 9v10M9 14h10' fill='none' stroke='%23d3d5d0' stroke-opacity='0.09' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E");
+        --plus-size: 28px;
+      }
 
-    [data-theme='light'] {
-      color-scheme: light;
-      --n-50: oklch(0.995 0.002 270);
-      --n-100: oklch(0.975 0.005 268);
-      --n-200: oklch(0.955 0.004 266);
-      --n-300: oklch(0.925 0.004 264);
-      --n-400: oklch(0.880 0.003 262);
-      --n-500: oklch(0.820 0.004 260);
-      --n-600: oklch(0.740 0.004 258);
-      --n-700: oklch(0.640 0.003 256);
-      --n-800: oklch(0.520 0.002 254);
-      --n-900: oklch(0.380 0.002 252);
-      --n-950: oklch(0.280 0.002 250);
-      --n-1000: oklch(0.200 0.002 248);
+      [data-theme="light"] {
+        color-scheme: light;
+        --n-50: oklch(0.995 0.002 270);
+        --n-100: oklch(0.975 0.005 268);
+        --n-200: oklch(0.955 0.004 266);
+        --n-300: oklch(0.925 0.004 264);
+        --n-400: oklch(0.88 0.003 262);
+        --n-500: oklch(0.82 0.004 260);
+        --n-600: oklch(0.74 0.004 258);
+        --n-700: oklch(0.64 0.003 256);
+        --n-800: oklch(0.52 0.002 254);
+        --n-900: oklch(0.38 0.002 252);
+        --n-950: oklch(0.28 0.002 250);
+        --n-1000: oklch(0.2 0.002 248);
 
-      --bg: var(--n-50);
-      --surface: var(--n-100);
-      --surface-elevated: var(--n-50);
-      --surface-raised: var(--n-50);
-      --surface-pressed: var(--n-200);
-      --surface-inset: var(--n-200);
-      --ink: var(--n-900);
-      --ink-inverse: var(--n-50);
+        --bg: var(--n-50);
+        --surface: var(--n-100);
+        --surface-elevated: var(--n-50);
+        --surface-raised: var(--n-50);
+        --surface-pressed: var(--n-200);
+        --surface-inset: var(--n-200);
+        --ink: var(--n-900);
+        --ink-inverse: var(--n-50);
 
-      --text-primary: var(--ink);
-      --text-secondary: color-mix(in srgb, var(--ink) 78%, transparent);
-      --text-muted: color-mix(in srgb, var(--ink) 62%, transparent);
-      --text-faint: color-mix(in srgb, var(--ink) 42%, transparent);
-      --text-disabled: color-mix(in srgb, var(--ink) 38%, transparent);
+        --text-primary: var(--ink);
+        --text-secondary: color-mix(in srgb, var(--ink) 78%, transparent);
+        --text-muted: color-mix(in srgb, var(--ink) 62%, transparent);
+        --text-faint: color-mix(in srgb, var(--ink) 42%, transparent);
+        --text-disabled: color-mix(in srgb, var(--ink) 38%, transparent);
 
-      --line: color-mix(in srgb, var(--ink) 14%, transparent);
-      --line-strong: color-mix(in srgb, var(--ink) 26%, transparent);
-      --line-soft: color-mix(in srgb, var(--ink) 7%, transparent);
-      --card-border: color-mix(in srgb, var(--ink) 10%, transparent);
+        --line: color-mix(in srgb, var(--ink) 14%, transparent);
+        --line-strong: color-mix(in srgb, var(--ink) 26%, transparent);
+        --line-soft: color-mix(in srgb, var(--ink) 7%, transparent);
+        --card-border: color-mix(in srgb, var(--ink) 10%, transparent);
 
-      --surface-hover: color-mix(in srgb, var(--ink) 4%, transparent);
-      --surface-active: color-mix(in srgb, var(--ink) 8%, transparent);
-      --disabled-bg: color-mix(in srgb, var(--ink) 5%, transparent);
-      --glow: color-mix(in srgb, var(--ink) 6%, transparent);
+        --surface-hover: color-mix(in srgb, var(--ink) 4%, transparent);
+        --surface-active: color-mix(in srgb, var(--ink) 8%, transparent);
+        --disabled-bg: color-mix(in srgb, var(--ink) 5%, transparent);
+        --glow: color-mix(in srgb, var(--ink) 6%, transparent);
 
-      --accent: oklch(0.40 0.08 108);
-      --accent-strong: oklch(0.34 0.09 108);
-      --accent-soft: color-mix(in srgb, var(--accent) 9%, transparent);
-      --on-accent: oklch(0.98 0.003 270);
-      --accent-text: oklch(0.42 0.09 108);
+        --accent: oklch(0.4 0.08 108);
+        --accent-strong: oklch(0.34 0.09 108);
+        --accent-soft: color-mix(in srgb, var(--accent) 9%, transparent);
+        --on-accent: oklch(0.98 0.003 270);
+        --accent-text: oklch(0.42 0.09 108);
 
-      --complement: oklch(0.50 0.09 60);
-      --complement-strong: oklch(0.44 0.10 60);
-      --complement-soft: color-mix(in srgb, var(--complement) 8%, transparent);
-      --on-complement: oklch(0.95 0.01 270);
+        --complement: oklch(0.5 0.09 60);
+        --complement-strong: oklch(0.44 0.1 60);
+        --complement-soft: color-mix(
+          in srgb,
+          var(--complement) 8%,
+          transparent
+        );
+        --on-complement: oklch(0.95 0.01 270);
 
-      --terracotta: oklch(0.46 0.10 45);
-      --terracotta-soft: color-mix(in srgb, var(--terracotta) 10%, transparent);
+        --terracotta: oklch(0.46 0.1 45);
+        --terracotta-soft: color-mix(
+          in srgb,
+          var(--terracotta) 10%,
+          transparent
+        );
 
-      --ring: color-mix(in srgb, var(--accent) 45%, transparent);
+        --ring: color-mix(in srgb, var(--accent) 45%, transparent);
 
-      --success: var(--accent);
-      --warning: oklch(0.52 0.11 75);
-      --danger: oklch(0.42 0.17 18);
-      --danger-soft: color-mix(in srgb, var(--danger) 10%, transparent);
+        --success: var(--accent);
+        --warning: oklch(0.52 0.11 75);
+        --danger: oklch(0.42 0.17 18);
+        --danger-soft: color-mix(in srgb, var(--danger) 10%, transparent);
 
-      --plus-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M14 8v12M8 14h12' fill='none' stroke='%23302840' stroke-opacity='0.04' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E");
-    }
+        --plus-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M14 8v12M8 14h12' fill='none' stroke='%23302840' stroke-opacity='0.04' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E");
+      }
 
-    /* ============================================================================
+      /* ============================================================================
        BASE — film grain identity. Grain IS the design: plus + dots + noise.
        ============================================================================ */
-    *, *::before, *::after { box-sizing: border-box; }
-    html { scroll-behavior: smooth; background: var(--bg); }
-    body {
-      margin: 0; min-width: 320px; min-height: 100vh;
-      background-color: var(--bg); color: var(--ink);
-      font-family: var(--font-body); font-size: var(--body-md);
-      font-optical-sizing: auto;
-      letter-spacing: var(--tracking-body); line-height: var(--lh-body);
-      position: relative; overflow-x: hidden;
-    }
-    body::before {
-      position: absolute; left: 0; top: 0; content: '';
-      width: 100%; height: 100%; z-index: var(--z-grain);
-      pointer-events: none;
-      background-image: var(--plus-pattern), var(--dot-pattern), var(--grain-svg);
-      background-size: var(--plus-size) var(--plus-size), 24px 24px, 200px 200px;
-      background-repeat: repeat;
-      opacity: 0.20;
-    }
-    ::selection { background: var(--accent); color: var(--on-accent); }
-    :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-    a { color: inherit; text-decoration: none; }
-    button { font: inherit; color: inherit; cursor: pointer; }
-    svg {
-      fill: none; stroke: currentColor; stroke-width: 1.5;
-      stroke-linecap: square; stroke-linejoin: miter; vertical-align: middle;
-    }
-    .shell { margin-inline: auto; width: 100%; max-width: var(--container); padding-inline: var(--space-4); }
-    @media (min-width: 720px) { .shell { padding-inline: var(--space-6); } }
-    @media (min-width: 1200px) { .shell { padding-inline: var(--space-9); } }
-
-    .caption {
-      font-family: var(--font-mono); font-size: var(--caption);
-      font-variant-numeric: tabular-nums; font-weight: 500;
-      letter-spacing: var(--tracking-caption); line-height: var(--lh-caption);
-      text-transform: uppercase; white-space: nowrap;
-    }
-    .mono-xs { font-family: var(--font-mono); font-size: var(--mono-xs); line-height: var(--lh-mono); }
-    .heading { font-family: var(--font-display); font-weight: 600; letter-spacing: var(--tracking-heading); line-height: var(--lh-heading); }
-    .heading-lg { font-size: var(--heading-lg); }
-    .body-lg { font-size: var(--body-lg); }
-    .body-sm { font-size: var(--body-sm); }
-
-    /* ============================================================================
-       BADGE — theme component
-       ============================================================================ */
-    .badge {
-      display: inline-flex; align-items: center; gap: var(--space-1);
-      border: 1px solid transparent; border-radius: var(--radius-pill);
-      padding: 0.25em 0.9em; font-size: var(--caption);
-      font-weight: 500; letter-spacing: var(--tracking-caption);
-      line-height: 1.6; text-transform: uppercase; white-space: nowrap;
-      font-family: var(--font-mono);
-    }
-    .badge--neutral { background: var(--surface-hover); color: var(--text-secondary); }
-    .badge--accent { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent-text); }
-    .badge--complement { background: var(--complement-soft); border-color: color-mix(in srgb, var(--complement) 30%, transparent); color: var(--complement); }
-    .badge--danger { background: var(--danger-soft); color: var(--danger); }
-
-    /* ============================================================================
-       BUTTONS — one monochrome language, energy as emphasis
-       ============================================================================ */
-    .btn {
-      position: relative; display: inline-flex; align-items: center; justify-content: center;
-      gap: var(--space-2); border: 1px solid transparent; border-radius: var(--radius-md);
-      font-size: var(--body-md); font-weight: 550; letter-spacing: 0.005em;
-      line-height: 1; text-decoration: none; white-space: nowrap;
-      transition: background-color var(--dur-2) var(--ease-standard),
-        border-color var(--dur-2) var(--ease-standard),
-        color var(--dur-2) var(--ease-standard),
-        box-shadow var(--dur-2) var(--ease-standard),
-        transform var(--dur-1) var(--ease-standard);
-    }
-    .btn:active:not(:disabled) { transform: translateY(1px); }
-    .btn svg { width: 18px; height: 18px; stroke-width: 1.8; }
-    .btn--primary { background: var(--ink); color: var(--ink-inverse); }
-    .btn--primary:hover:not(:disabled) { background: var(--surface-elevated); border-color: var(--ink); color: var(--ink); }
-    .btn--secondary { background: var(--surface); border-color: var(--line); color: var(--text-primary); }
-    .btn--secondary:hover:not(:disabled) { background: var(--surface-elevated); border-color: var(--line-strong); }
-    .btn--accent { background: var(--accent); color: var(--on-accent); }
-    .btn--accent:hover:not(:disabled) { background: var(--accent-strong); transform: translateY(-2px); box-shadow: 0 8px 32px var(--accent-soft); }
-    .btn--danger { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 35%, transparent); color: var(--danger); }
-    .btn--sm { min-height: 32px; padding-inline: var(--space-3); font-size: var(--body-sm); }
-    .btn--md { min-height: 40px; padding-inline: var(--space-4); }
-    .btn--lg { min-height: 48px; padding-inline: var(--space-5); }
-    .btn--icon { width: 40px; height: 40px; padding: 0; }
-    .btn:disabled { background: var(--disabled-bg); border-color: transparent; color: var(--text-disabled); cursor: not-allowed; }
-
-    /* ============================================================================
-       INPUT FIELD — theme component
-       ============================================================================ */
-    .field { display: flex; flex-direction: column; gap: var(--space-2); width: 100%; max-width: 560px; }
-    .field__label { font-family: var(--font-mono); font-size: var(--caption); letter-spacing: var(--tracking-caption); text-transform: uppercase; color: var(--text-secondary); }
-    .field__input {
-      width: 100%; min-height: 44px;
-      border: 1px solid var(--line); border-radius: var(--radius-md);
-      background: var(--surface); padding: var(--space-2) var(--space-3);
-      color: var(--text-primary); outline: none; font-family: var(--font-mono); font-size: var(--mono-md);
-      transition: border-color var(--dur-2) var(--ease-standard), box-shadow var(--dur-2) var(--ease-standard);
-    }
-    .field__input::placeholder { color: var(--text-muted); }
-    .field__input:hover:not(:focus) { border-color: var(--line-strong); }
-    .field__input:focus { border-color: var(--ring); box-shadow: 0 0 0 3px var(--accent-soft); }
-    .field__hint { margin: 0; font-size: var(--body-xs); color: var(--text-muted); }
-
-    /* ============================================================================
-       HEADER
-       ============================================================================ */
-    .head {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: var(--space-4); padding-block: var(--space-4);
-      border-bottom: 1px solid var(--line-soft);
-      position: sticky; top: 0; z-index: var(--z-nav);
-      background: color-mix(in srgb, var(--bg) 85%, transparent);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    }
-    .head__brand { display: flex; align-items: center; gap: var(--space-2); }
-    .head__glyph {
-      display: grid; width: 30px; height: 30px; place-items: center;
-      border: 1px solid var(--line); border-radius: var(--radius-sm);
-      background: var(--surface); font-family: var(--font-display);
-      font-size: 1.05rem; font-weight: 700; font-style: italic;
-      color: var(--accent-text);
-    }
-    .head__word {
-      font-family: var(--font-mono); font-size: var(--caption);
-      font-weight: 500; letter-spacing: var(--tracking-caption);
-      text-transform: uppercase; color: var(--text-primary);
-    }
-    .head__nav { display: flex; align-items: center; gap: var(--space-5); }
-    .head__link {
-      font-family: var(--font-mono); font-size: var(--caption);
-      font-weight: 500; letter-spacing: var(--tracking-caption);
-      text-transform: uppercase; color: var(--text-muted);
-      transition: color var(--dur-2) var(--ease-standard);
-    }
-    .head__link:hover { color: var(--text-primary); }
-    .theme-toggle {
-      display: grid; width: 38px; height: 38px; place-items: center;
-      border: 1px solid var(--line); border-radius: var(--radius-pill);
-      background: var(--surface); color: var(--text-secondary);
-      transition: border-color var(--dur-2) var(--ease-standard), color var(--dur-2) var(--ease-standard);
-    }
-    .theme-toggle:hover { border-color: var(--line-strong); color: var(--text-primary); }
-    .theme-toggle:active { transform: translateY(1px); }
-    .theme-toggle svg { width: 17px; height: 17px; }
-    @media (max-width: 600px) { .head__nav { display: none; } }
-
-    /* ============================================================================
-       HERO — centered, painted-wall canvas
-       ============================================================================ */
-    .hero { text-align: center; padding-block: clamp(5rem, 12vw, 9rem); position: relative; }
-    .hero__badges { display: flex; justify-content: center; gap: var(--space-2); margin-bottom: var(--space-7); flex-wrap: wrap; }
-    .hero__title {
-      font-family: var(--font-display);
-      font-size: clamp(3.5rem, 10vw, var(--display-lg));
-      font-weight: 700; letter-spacing: var(--tracking-display); line-height: 0.95;
-      color: var(--text-primary);
-    }
-    .hero__title em { font-style: italic; color: var(--accent-text); }
-    .hero__sub { max-width: 52ch; margin: var(--space-6) auto 0; font-size: var(--body-lg); color: var(--text-muted); line-height: var(--lh-body); }
-    .hero__cta { margin: var(--space-8) 0 0; display: flex; justify-content: center; gap: var(--space-3); flex-wrap: wrap; }
-    .hero__meta { margin: var(--space-5) 0 0; color: var(--text-faint); }
-
-    /* ============================================================================
-       TERMINAL — full width showcase
-       ============================================================================ */
-    .terminal-wrap { max-width: 640px; margin: var(--space-11) auto 0; }
-    .terminal { background: var(--surface-inset); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-3); border: 1px solid var(--card-border); }
-    .terminal-bar { display: flex; align-items: center; gap: 8px; padding: 14px 18px; background: var(--surface); border-bottom: 1px solid var(--line-soft); }
-    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
-    .terminal-dot:nth-child(1) { background: var(--danger); }
-    .terminal-dot:nth-child(2) { background: var(--warning); }
-    .terminal-dot:nth-child(3) { background: var(--accent); }
-    .terminal-body { padding: 20px 24px; font-family: var(--font-mono); font-size: var(--mono-sm); line-height: 1.9; color: var(--text-secondary); }
-    .terminal-body .prompt { color: var(--text-primary); }
-    .terminal-body .cmd { color: var(--complement); }
-    .terminal-body .path { color: var(--n-400); }
-    .terminal-body .output { color: var(--text-muted); }
-    .terminal-body .success { color: var(--accent-text); }
-
-    /* ============================================================================
-       COMMAND REFERENCE — table layout
-       ============================================================================ */
-    .reference { padding-block: var(--space-11); }
-    .reference__label { color: var(--accent-text); margin-bottom: var(--space-4); }
-    .reference__title { margin-bottom: var(--space-4); color: var(--text-primary); }
-    .reference__desc { max-width: 52ch; color: var(--text-muted); margin-bottom: var(--space-7); }
-    .table-wrap-el {
-      display: flex; flex-direction: column; gap: var(--space-2);
-      overflow-x: auto; border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg); background: var(--surface);
-      box-shadow: var(--shadow-1);
-    }
-    .table-wrap-el__caption { padding: var(--space-3) var(--space-4); color: var(--text-muted); }
-    .table { width: 100%; border-collapse: collapse; font-size: var(--body-sm); }
-    .table__head {
-      color: var(--text-muted); text-align: left; font-weight: 500;
-      background: var(--surface-hover); padding: var(--space-2) var(--space-4);
-      font-family: var(--font-mono); font-size: var(--caption); letter-spacing: var(--tracking-caption); text-transform: uppercase;
-    }
-    .table__row { border-top: 1px solid var(--line-soft); }
-    .table__row:hover { background: var(--surface-hover); }
-    .table__cell { padding: var(--space-3) var(--space-4); color: var(--text-primary); font-family: var(--font-mono); font-size: var(--mono-sm); }
-    .table__cell--muted { color: var(--text-muted); font-family: var(--font-body); font-size: var(--body-sm); }
-
-    /* ============================================================================
-       SPLIT — how it works + try it
-       ============================================================================ */
-    .split { padding-block: clamp(4rem, 10vw, 8rem); }
-    .split__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-9); align-items: start; }
-    .split__label { color: var(--accent-text); margin-bottom: var(--space-4); }
-    .split__title { margin-bottom: var(--space-8); color: var(--text-primary); }
-    .how-card { display: flex; gap: var(--space-4); align-items: flex-start; padding: var(--space-5) 0; border-top: 1px solid var(--line-soft); }
-    .how-card:last-child { border-bottom: 1px solid var(--line-soft); }
-    .how-num {
-      font-family: var(--font-display); font-size: var(--display-sm); font-weight: 700;
-      color: var(--accent-text); line-height: 1; flex: 0 0 auto;
-    }
-    .how-card h3 { font-family: var(--font-display); font-size: var(--heading-sm); font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-2); }
-    .how-card p { font-size: var(--body-sm); color: var(--text-muted); line-height: var(--lh-body); }
-    .try-card {
-      padding: var(--space-7); border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg); background: var(--surface);
-      box-shadow: var(--shadow-2);
-    }
-    .try-card__title { font-family: var(--font-display); font-size: var(--heading-sm); font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-2); }
-    .try-card__copy { font-size: var(--body-sm); color: var(--text-muted); margin-bottom: var(--space-6); }
-    .try-card .btn { margin-top: var(--space-4); }
-    @media (max-width: 900px) { .split__grid { grid-template-columns: 1fr; } }
-
-    /* ============================================================================
-       CTA — terracotta block
-       ============================================================================ */
-    .cta {
-      text-align: center; padding-block: clamp(4rem, 12vw, 10rem);
-      background: var(--terracotta); border-radius: var(--radius-xl);
-      margin-block: var(--space-9); position: relative; overflow: hidden;
-    }
-    .cta::before {
-      content: ''; position: absolute; inset: 0;
-      background-image: var(--dot-pattern); background-size: 24px 24px;
-      opacity: 0.25;
-    }
-    .cta > * { position: relative; z-index: 1; }
-    .cta__badge { display: inline-flex; margin-bottom: var(--space-5); }
-    .cta h2 {
-      font-family: var(--font-display); font-size: clamp(2rem, 6vw, var(--display-md));
-      font-weight: 700; letter-spacing: var(--tracking-display); line-height: var(--lh-display);
-      color: var(--n-1000);
-    }
-    .cta h2 em { font-style: italic; color: var(--n-50); }
-    .cta p { max-width: 40ch; margin: var(--space-4) auto 0; font-size: var(--body-lg); color: color-mix(in srgb, var(--n-1000) 80%, transparent); }
-    .cta .btn { margin-top: var(--space-7); }
-    .cta__badge .badge { background: color-mix(in srgb, var(--n-1000) 85%, transparent); border-color: color-mix(in srgb, var(--n-1000) 30%, transparent); color: var(--n-50); }
-
-    /* ============================================================================
-       FOOTER
-       ============================================================================ */
-    .foot { display: flex; justify-content: space-between; align-items: center; padding-block: var(--space-5); border-top: 1px solid var(--line-soft); }
-    .foot span, .foot a { font-family: var(--font-mono); font-size: var(--caption); font-weight: 500; letter-spacing: var(--tracking-caption); text-transform: uppercase; color: var(--complement); transition: color var(--dur-2) var(--ease-standard); }
-    .foot a:hover { color: var(--complement-strong); }
-    @media (max-width: 600px) { .foot { flex-direction: column; gap: var(--space-3); } }
-
-    /* Motion */
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- HEADER -->
-  <header class="head shell">
-    <a href="#top" class="head__brand">
-      <span class="head__glyph">b</span>
-      <span class="head__word">blog-cli</span>
-    </a>
-    <nav class="head__nav">
-      <a class="head__link" href="#reference">Commands</a>
-      <a class="head__link" href="#how">How it works</a>
-    </nav>
-    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-      <svg viewBox="0 0 24 24" id="theme-icon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 3v4"/><path d="M21 5h-4"/></svg>
-    </button>
-  </header>
-
-  <main id="top" class="shell">
-
-    <!-- HERO -->
-    <section class="hero">
-      <div class="hero__badges">
-        <span class="badge badge--accent"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent-text)"></span> open source</span>
-        <span class="badge badge--complement">MIT license</span>
-        <span class="badge badge--neutral">node.js ≥ 18</span>
-      </div>
-      <h1 class="hero__title">Publish posts<br>from your <em>terminal</em></h1>
-      <p class="hero__sub">Write a markdown file, run one command, and it's live on GitHub. No config, no init, no backend.</p>
-      <div class="hero__cta">
-        <a href="https://github.com/Joelorbit/Blog_Cli" target="_blank" class="btn btn--primary btn--lg">
-          <svg viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 .8 6-0.5 6-2.8 0-1-.5-2-1.3-2.7 0-1.3-.3-2.4-.5-3.5-1.3 0-2.6.7-3.3 1.4a11.8 11.8 0 0 0-5.8 0C8.4 3.7 7 3 5.8 3c-.2 1.1-.5 2.2-.5 3.5A3.9 3.9 0 0 0 4 9.2C3.4 9.8 3 10.6 3 11.7c0 2.3 2.8 3.6 5.8 2.8A4.8 4.8 0 0 0 9 18v4"/></svg>
-          Get Started
-        </a>
-        <a href="https://github.com/Joelorbit/Blog_Cli#readme" target="_blank" class="btn btn--secondary btn--lg">
-          <svg viewBox="0 0 24 24"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/></svg>
-          Read Docs
-        </a>
-      </div>
-      <p class="mono-xs hero__meta">zero deps · plain node · json posts</p>
-
-      <div class="terminal-wrap">
-        <div class="terminal">
-          <div class="terminal-bar">
-            <div class="terminal-dot"></div>
-            <div class="terminal-dot"></div>
-            <div class="terminal-dot"></div>
-          </div>
-          <div class="terminal-body">
-            <span class="prompt">$</span> <span class="cmd">publish</span> <span class="path">~/notes/my-post.md</span><br>
-            <span class="output">Saved posts/my-post.json</span><br>
-            <span class="success">✓ Pushed to GitHub</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- COMMAND REFERENCE -->
-    <section id="reference" class="reference">
-      <p class="caption reference__label">Reference</p>
-      <h2 class="heading heading-lg reference__title">One tool. Three commands.</h2>
-      <p class="body-lg reference__desc">Every command does one thing and prints exactly what happened. No hidden state.</p>
-
-      <div class="table-wrap-el">
-        <span class="caption table-wrap-el__caption">cli reference</span>
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col" class="table__head">command</th>
-              <th scope="col" class="table__head">what it does</th>
-              <th scope="col" class="table__head">output</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="table__row">
-              <td class="table__cell">$ publish my-post.md</td>
-              <td class="table__cell table__cell--muted">Convert markdown to JSON, commit, push to GitHub</td>
-              <td class="table__cell">posts/my-post.json</td>
-            </tr>
-            <tr class="table__row">
-              <td class="table__cell">$ publish</td>
-              <td class="table__cell table__cell--muted">Run without a path — shows usage and available formats</td>
-              <td class="table__cell">usage message</td>
-            </tr>
-            <tr class="table__row">
-              <td class="table__cell">$ npm install -g</td>
-              <td class="table__cell table__cell--muted">Install the CLI everywhere. Zero config after that</td>
-              <td class="table__cell">global binary</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- SPLIT: HOW IT WORKS + TRY IT -->
-    <section id="how" class="split">
-      <p class="caption split__label">How it works</p>
-      <h2 class="heading heading-lg split__title">From file to live post</h2>
-      <div class="split__grid">
-        <div>
-          <div class="how-card">
-            <div class="how-num">01</div>
-            <div>
-              <h3>Write</h3>
-              <p>Create any .md or .txt file. Plain text, no fluff.</p>
-            </div>
-          </div>
-          <div class="how-card">
-            <div class="how-num">02</div>
-            <div>
-              <h3>Publish</h3>
-              <p>Run publish. Saves JSON, commits, and pushes to GitHub.</p>
-            </div>
-          </div>
-          <div class="how-card">
-            <div class="how-num">03</div>
-            <div>
-              <h3>Fetch</h3>
-              <p>Your website loads JSON from the GitHub raw URL. No backend needed.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="try-card">
-          <h3 class="try-card__title">Publish it yourself</h3>
-          <p class="try-card__copy">Point blog-cli at any markdown file. It saves, commits, and pushes — all in one command.</p>
-          <div class="field">
-            <label class="field__label" for="try-path">post path</label>
-            <input class="field__input" id="try-path" type="text" value="~/notes/my-post.md" spellcheck="false">
-          </div>
-          <a href="https://github.com/Joelorbit/Blog_Cli" target="_blank" class="btn btn--accent btn--md">
-            <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-            Publish
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA -->
-    <div class="cta">
-      <span class="cta__badge"><span class="badge">own taste, own tools</span></span>
-      <h2>Start blogging<br><em>today</em></h2>
-      <p>Clone, install, publish. No config, no init, no hassle.</p>
-      <a href="https://github.com/Joelorbit/Blog_Cli" target="_blank" class="btn btn--primary btn--lg">
-        <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        View on GitHub
-      </a>
-    </div>
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="foot shell">
-    <span>© 2026 Joelorbit</span>
-    <a href="https://github.com/Joelorbit/Blog_Cli" target="_blank">GitHub →</a>
-  </footer>
-
-  <script>
-    function toggleTheme() {
-      const html = document.documentElement;
-      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-      html.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
-      document.getElementById('theme-icon').innerHTML = next === 'dark'
-        ? '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 3v4"/><path d="M21 5h-4"/>'
-        : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>';
-    }
-    (function() {
-      const saved = localStorage.getItem('theme');
-      if (saved) {
-        document.documentElement.setAttribute('data-theme', saved);
-        if (saved === 'light') {
-          document.getElementById('theme-icon').innerHTML = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>';
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        background: var(--bg);
+      }
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        background-color: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: var(--body-md);
+        font-optical-sizing: auto;
+        letter-spacing: var(--tracking-body);
+        line-height: var(--lh-body);
+        position: relative;
+        overflow-x: hidden;
+      }
+      body::before {
+        position: absolute;
+        left: 0;
+        top: 0;
+        content: "";
+        width: 100%;
+        height: 100%;
+        z-index: var(--z-grain);
+        pointer-events: none;
+        background-image:
+          var(--plus-pattern), var(--dot-pattern), var(--grain-svg);
+        background-size:
+          var(--plus-size) var(--plus-size),
+          24px 24px,
+          200px 200px;
+        background-repeat: repeat;
+        opacity: 0.2;
+      }
+      ::selection {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
+      :focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+      button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+      svg {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.5;
+        stroke-linecap: square;
+        stroke-linejoin: miter;
+        vertical-align: middle;
+      }
+      .shell {
+        margin-inline: auto;
+        width: 100%;
+        max-width: var(--container);
+        padding-inline: var(--space-4);
+      }
+      @media (min-width: 720px) {
+        .shell {
+          padding-inline: var(--space-6);
         }
       }
-    })();
-  </script>
+      @media (min-width: 1200px) {
+        .shell {
+          padding-inline: var(--space-9);
+        }
+      }
 
-</body>
+      .caption {
+        font-family: var(--font-mono);
+        font-size: var(--caption);
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+        letter-spacing: var(--tracking-caption);
+        line-height: var(--lh-caption);
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .mono-xs {
+        font-family: var(--font-mono);
+        font-size: var(--mono-xs);
+        line-height: var(--lh-mono);
+      }
+      .heading {
+        font-family: var(--font-display);
+        font-weight: 600;
+        letter-spacing: var(--tracking-heading);
+        line-height: var(--lh-heading);
+      }
+      .heading-lg {
+        font-size: var(--heading-lg);
+      }
+      .body-lg {
+        font-size: var(--body-lg);
+      }
+      .body-sm {
+        font-size: var(--body-sm);
+      }
+
+      /* ============================================================================
+       BADGE — theme component
+       ============================================================================ */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-1);
+        border: 1px solid transparent;
+        border-radius: var(--radius-pill);
+        padding: 0.25em 0.9em;
+        font-size: var(--caption);
+        font-weight: 500;
+        letter-spacing: var(--tracking-caption);
+        line-height: 1.6;
+        text-transform: uppercase;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+      }
+      .badge--neutral {
+        background: var(--surface-hover);
+        color: var(--text-secondary);
+      }
+      .badge--accent {
+        background: var(--accent-soft);
+        border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+        color: var(--accent-text);
+      }
+      .badge--complement {
+        background: var(--complement-soft);
+        border-color: color-mix(in srgb, var(--complement) 30%, transparent);
+        color: var(--complement);
+      }
+      .badge--danger {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      /* ============================================================================
+       BUTTONS — one monochrome language, energy as emphasis
+       ============================================================================ */
+      .btn {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        border: 1px solid transparent;
+        border-radius: var(--radius-md);
+        font-size: var(--body-md);
+        font-weight: 550;
+        letter-spacing: 0.005em;
+        line-height: 1;
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+          background-color var(--dur-2) var(--ease-standard),
+          border-color var(--dur-2) var(--ease-standard),
+          color var(--dur-2) var(--ease-standard),
+          box-shadow var(--dur-2) var(--ease-standard),
+          transform var(--dur-1) var(--ease-standard);
+      }
+      .btn:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+      .btn svg {
+        width: 18px;
+        height: 18px;
+        stroke-width: 1.8;
+      }
+      .btn--primary {
+        background: var(--ink);
+        color: var(--ink-inverse);
+      }
+      .btn--primary:hover:not(:disabled) {
+        background: var(--surface-elevated);
+        border-color: var(--ink);
+        color: var(--ink);
+      }
+      .btn--secondary {
+        background: var(--surface);
+        border-color: var(--line);
+        color: var(--text-primary);
+      }
+      .btn--secondary:hover:not(:disabled) {
+        background: var(--surface-elevated);
+        border-color: var(--line-strong);
+      }
+      .btn--accent {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
+      .btn--accent:hover:not(:disabled) {
+        background: var(--accent-strong);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px var(--accent-soft);
+      }
+      .btn--danger {
+        background: var(--danger-soft);
+        border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+        color: var(--danger);
+      }
+      .btn--sm {
+        min-height: 32px;
+        padding-inline: var(--space-3);
+        font-size: var(--body-sm);
+      }
+      .btn--md {
+        min-height: 40px;
+        padding-inline: var(--space-4);
+      }
+      .btn--lg {
+        min-height: 48px;
+        padding-inline: var(--space-5);
+      }
+      .btn--icon {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+      }
+      .btn:disabled {
+        background: var(--disabled-bg);
+        border-color: transparent;
+        color: var(--text-disabled);
+        cursor: not-allowed;
+      }
+
+      /* ============================================================================
+       INPUT FIELD — theme component
+       ============================================================================ */
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        width: 100%;
+        max-width: 560px;
+      }
+      .field__label {
+        font-family: var(--font-mono);
+        font-size: var(--caption);
+        letter-spacing: var(--tracking-caption);
+        text-transform: uppercase;
+        color: var(--text-secondary);
+      }
+      .field__input {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        padding: var(--space-2) var(--space-3);
+        color: var(--text-primary);
+        outline: none;
+        font-family: var(--font-mono);
+        font-size: var(--mono-md);
+        transition:
+          border-color var(--dur-2) var(--ease-standard),
+          box-shadow var(--dur-2) var(--ease-standard);
+      }
+      .field__input::placeholder {
+        color: var(--text-muted);
+      }
+      .field__input:hover:not(:focus) {
+        border-color: var(--line-strong);
+      }
+      .field__input:focus {
+        border-color: var(--ring);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+      .field__hint {
+        margin: 0;
+        font-size: var(--body-xs);
+        color: var(--text-muted);
+      }
+
+      /* ============================================================================
+       HEADER
+       ============================================================================ */
+      .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding-block: var(--space-4);
+        border-bottom: 1px solid var(--line-soft);
+        position: sticky;
+        top: 0;
+        z-index: var(--z-nav);
+        background: color-mix(in srgb, var(--bg) 85%, transparent);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .head__brand {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+      }
+      .head__glyph {
+        display: grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: var(--surface);
+        font-family: var(--font-display);
+        font-size: 1.05rem;
+        font-weight: 700;
+        font-style: italic;
+        color: var(--accent-text);
+      }
+      .head__word {
+        font-family: var(--font-mono);
+        font-size: var(--caption);
+        font-weight: 500;
+        letter-spacing: var(--tracking-caption);
+        text-transform: uppercase;
+        color: var(--text-primary);
+      }
+      .head__nav {
+        display: flex;
+        align-items: center;
+        gap: var(--space-5);
+      }
+      .head__link {
+        font-family: var(--font-mono);
+        font-size: var(--caption);
+        font-weight: 500;
+        letter-spacing: var(--tracking-caption);
+        text-transform: uppercase;
+        color: var(--text-muted);
+        transition: color var(--dur-2) var(--ease-standard);
+      }
+      .head__link:hover {
+        color: var(--text-primary);
+      }
+      .theme-toggle {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-pill);
+        background: var(--surface);
+        color: var(--text-secondary);
+        transition:
+          border-color var(--dur-2) var(--ease-standard),
+          color var(--dur-2) var(--ease-standard);
+      }
+      .theme-toggle:hover {
+        border-color: var(--line-strong);
+        color: var(--text-primary);
+      }
+      .theme-toggle:active {
+        transform: translateY(1px);
+      }
+      .theme-toggle svg {
+        width: 17px;
+        height: 17px;
+      }
+      @media (max-width: 600px) {
+        .head__nav {
+          display: none;
+        }
+      }
+
+      /* ============================================================================
+       HERO — centered, painted-wall canvas
+       ============================================================================ */
+      .hero {
+        text-align: center;
+        padding-block: clamp(5rem, 12vw, 9rem);
+        position: relative;
+      }
+      .hero__badges {
+        display: flex;
+        justify-content: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-7);
+        flex-wrap: wrap;
+      }
+      .hero__title {
+        font-family: var(--font-display);
+        font-size: clamp(3.5rem, 10vw, var(--display-lg));
+        font-weight: 700;
+        letter-spacing: var(--tracking-display);
+        line-height: 0.95;
+        color: var(--text-primary);
+      }
+      .hero__title em {
+        font-style: italic;
+        color: var(--accent-text);
+      }
+      .hero__sub {
+        max-width: 52ch;
+        margin: var(--space-6) auto 0;
+        font-size: var(--body-lg);
+        color: var(--text-muted);
+        line-height: var(--lh-body);
+      }
+      .hero__cta {
+        margin: var(--space-8) 0 0;
+        display: flex;
+        justify-content: center;
+        gap: var(--space-3);
+        flex-wrap: wrap;
+      }
+      .hero__meta {
+        margin: var(--space-5) 0 0;
+        color: var(--text-faint);
+      }
+
+      /* ============================================================================
+       TERMINAL — full width showcase
+       ============================================================================ */
+      .terminal-wrap {
+        max-width: 640px;
+        margin: var(--space-11) auto 0;
+      }
+      .terminal {
+        background: var(--surface-inset);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-3);
+        border: 1px solid var(--card-border);
+      }
+      .terminal-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 18px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .terminal-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+      .terminal-dot:nth-child(1) {
+        background: var(--danger);
+      }
+      .terminal-dot:nth-child(2) {
+        background: var(--warning);
+      }
+      .terminal-dot:nth-child(3) {
+        background: var(--accent);
+      }
+      .terminal-body {
+        padding: 20px 24px;
+        font-family: var(--font-mono);
+        font-size: var(--mono-sm);
+        line-height: 1.9;
+        color: var(--text-secondary);
+      }
+      .terminal-body .prompt {
+        color: var(--text-primary);
+      }
+      .terminal-body .cmd {
+        color: var(--complement);
+      }
+      .terminal-body .path {
+        color: var(--n-400);
+      }
+      .terminal-body .output {
+        color: var(--text-muted);
+      }
+      .terminal-body .success {
+        color: var(--accent-text);
+      }
+
+      /* ============================================================================
+       COMMAND REFERENCE — table layout
+       ============================================================================ */
+      .reference {
+        padding-block: var(--space-11);
+      }
+      .reference__label {
+        color: var(--accent-text);
+        margin-bottom: var(--space-4);
+      }
+      .reference__title {
+        margin-bottom: var(--space-4);
+        color: var(--text-primary);
+      }
+      .reference__desc {
+        max-width: 52ch;
+        color: var(--text-muted);
+        margin-bottom: var(--space-7);
+      }
+      .table-wrap-el {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        overflow-x: auto;
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        box-shadow: var(--shadow-1);
+      }
+      .table-wrap-el__caption {
+        padding: var(--space-3) var(--space-4);
+        color: var(--text-muted);
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--body-sm);
+      }
+      .table__head {
+        color: var(--text-muted);
+        text-align: left;
+        font-weight: 500;
+        background: var(--surface-hover);
+        padding: var(--space-2) var(--space-4);
+        font-family: var(--font-mono);
+        font-size: var(--caption);
+        letter-spacing: var(--tracking-caption);
+        text-transform: uppercase;
+      }
+      .table__row {
+        border-top: 1px solid var(--line-soft);
+      }
+      .table__row:hover {
+        background: var(--surface-hover);
+      }
+      .table__cell {
+        padding: var(--space-3) var(--space-4);
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: var(--mono-sm);
+      }
+      .table__cell--muted {
+        color: var(--text-muted);
+        font-family: var(--font-body);
+        font-size: var(--body-sm);
+      }
+
+      /* ============================================================================
+       SPLIT — how it works + try it
+       ============================================================================ */
+      .split {
+        padding-block: clamp(4rem, 10vw, 8rem);
+      }
+      .split__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-9);
+        align-items: start;
+      }
+      .split__label {
+        color: var(--accent-text);
+        margin-bottom: var(--space-4);
+      }
+      .split__title {
+        margin-bottom: var(--space-8);
+        color: var(--text-primary);
+      }
+      .how-card {
+        display: flex;
+        gap: var(--space-4);
+        align-items: flex-start;
+        padding: var(--space-5) 0;
+        border-top: 1px solid var(--line-soft);
+      }
+      .how-card:last-child {
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .how-num {
+        font-family: var(--font-display);
+        font-size: var(--display-sm);
+        font-weight: 700;
+        color: var(--accent-text);
+        line-height: 1;
+        flex: 0 0 auto;
+      }
+      .how-card h3 {
+        font-family: var(--font-display);
+        font-size: var(--heading-sm);
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-2);
+      }
+      .how-card p {
+        font-size: var(--body-sm);
+        color: var(--text-muted);
+        line-height: var(--lh-body);
+      }
+      .try-card {
+        padding: var(--space-7);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        box-shadow: var(--shadow-2);
+      }
+      .try-card__title {
+        font-family: var(--font-display);
+        font-size: var(--heading-sm);
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-2);
+      }
+      .try-card__copy {
+        font-size: var(--body-sm);
+        color: var(--text-muted);
+        margin-bottom: var(--space-6);
+      }
+      .try-card .btn {
+        margin-top: var(--space-4);
+      }
+      @media (max-width: 900px) {
+        .split__grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ============================================================================
+       CTA — terracotta block
+       ============================================================================ */
+      .cta {
+        text-align: center;
+        padding-block: clamp(4rem, 12vw, 10rem);
+        background: var(--terracotta);
+        border-radius: var(--radius-xl);
+        margin-block: var(--space-9);
+        position: relative;
+        overflow: hidden;
+      }
+      .cta::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: var(--dot-pattern);
+        background-size: 24px 24px;
+        opacity: 0.25;
+      }
+      .cta > * {
+        position: relative;
+        z-index: 1;
+      }
+      .cta__badge {
+        display: inline-flex;
+        margin-bottom: var(--space-5);
+      }
+      .cta h2 {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 6vw, var(--display-md));
+        font-weight: 700;
+        letter-spacing: var(--tracking-display);
+        line-height: var(--lh-display);
+        color: var(--n-1000);
+      }
+      .cta h2 em {
+        font-style: italic;
+        color: var(--n-50);
+      }
+      .cta p {
+        max-width: 40ch;
+        margin: var(--space-4) auto 0;
+        font-size: var(--body-lg);
+        color: color-mix(in srgb, var(--n-1000) 80%, transparent);
+      }
+      .cta .btn {
+        margin-top: var(--space-7);
+      }
+      .cta__badge .badge {
+        background: color-mix(in srgb, var(--n-1000) 85%, transparent);
+        border-color: color-mix(in srgb, var(--n-1000) 30%, transparent);
+        color: var(--n-50);
+      }
+
+      /* ============================================================================
+       FOOTER
+       ============================================================================ */
+      .foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-block: var(--space-5);
+        border-top: 1px solid var(--line-soft);
+      }
+      .foot span,
+      .foot a {
+        font-family: var(--font-mono);
+        font-size: var(--caption);
+        font-weight: 500;
+        letter-spacing: var(--tracking-caption);
+        text-transform: uppercase;
+        color: var(--complement);
+        transition: color var(--dur-2) var(--ease-standard);
+      }
+      .foot a:hover {
+        color: var(--complement-strong);
+      }
+      @media (max-width: 600px) {
+        .foot {
+          flex-direction: column;
+          gap: var(--space-3);
+        }
+      }
+
+      /* Motion */
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HEADER -->
+    <header class="head shell">
+      <a href="#top" class="head__brand">
+        <span class="head__glyph">b</span>
+        <span class="head__word">blog-cli</span>
+      </a>
+      <nav class="head__nav">
+        <a class="head__link" href="#reference">Commands</a>
+        <a class="head__link" href="#how">How it works</a>
+      </nav>
+      <button
+        class="theme-toggle"
+        onclick="toggleTheme()"
+        aria-label="Toggle theme"
+      >
+        <svg viewBox="0 0 24 24" id="theme-icon">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+          <path d="M19 3v4" />
+          <path d="M21 5h-4" />
+        </svg>
+      </button>
+    </header>
+
+    <main id="top" class="shell">
+      <!-- HERO -->
+      <section class="hero">
+        <div class="hero__badges">
+          <span class="badge badge--accent"
+            ><span
+              style="
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--accent-text);
+              "
+            ></span>
+            open source</span
+          >
+          <span class="badge badge--complement">MIT license</span>
+          <span class="badge badge--neutral">node.js ≥ 18</span>
+        </div>
+        <h1 class="hero__title">
+          Publish posts<br />from your <em>terminal</em>
+        </h1>
+        <p class="hero__sub">
+          Write a markdown file, run one command, and it's live on GitHub. No
+          config, no init, no backend.
+        </p>
+        <div class="hero__cta">
+          <a
+            href="https://github.com/Joelorbit/Blog_Cli"
+            target="_blank"
+            class="btn btn--primary btn--lg"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 .8 6-0.5 6-2.8 0-1-.5-2-1.3-2.7 0-1.3-.3-2.4-.5-3.5-1.3 0-2.6.7-3.3 1.4a11.8 11.8 0 0 0-5.8 0C8.4 3.7 7 3 5.8 3c-.2 1.1-.5 2.2-.5 3.5A3.9 3.9 0 0 0 4 9.2C3.4 9.8 3 10.6 3 11.7c0 2.3 2.8 3.6 5.8 2.8A4.8 4.8 0 0 0 9 18v4"
+              />
+            </svg>
+            Get Started
+          </a>
+          <a
+            href="https://github.com/Joelorbit/Blog_Cli#readme"
+            target="_blank"
+            class="btn btn--secondary btn--lg"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M12 5v16" />
+              <path
+                d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"
+              />
+            </svg>
+            Read Docs
+          </a>
+        </div>
+        <p class="mono-xs hero__meta">zero deps · plain node · json posts</p>
+
+        <div class="terminal-wrap">
+          <div class="terminal">
+            <div class="terminal-bar">
+              <div class="terminal-dot"></div>
+              <div class="terminal-dot"></div>
+              <div class="terminal-dot"></div>
+            </div>
+            <div class="terminal-body">
+              <span class="prompt">$</span> <span class="cmd">publish</span>
+              <span class="path">~/notes/my-post.md</span><br />
+              <span class="output">Saved posts/my-post.json</span><br />
+              <span class="success">✓ Pushed to GitHub</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COMMAND REFERENCE -->
+      <section id="reference" class="reference">
+        <p class="caption reference__label">Reference</p>
+        <h2 class="heading heading-lg reference__title">
+          One tool. Three commands.
+        </h2>
+        <p class="body-lg reference__desc">
+          Every command does one thing and prints exactly what happened. No
+          hidden state.
+        </p>
+
+        <div class="table-wrap-el">
+          <span class="caption table-wrap-el__caption">cli reference</span>
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col" class="table__head">command</th>
+                <th scope="col" class="table__head">what it does</th>
+                <th scope="col" class="table__head">output</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="table__row">
+                <td class="table__cell">$ publish my-post.md</td>
+                <td class="table__cell table__cell--muted">
+                  Convert markdown to JSON, commit, push to GitHub
+                </td>
+                <td class="table__cell">posts/my-post.json</td>
+              </tr>
+              <tr class="table__row">
+                <td class="table__cell">$ publish</td>
+                <td class="table__cell table__cell--muted">
+                  Run without a path — shows usage and available formats
+                </td>
+                <td class="table__cell">usage message</td>
+              </tr>
+              <tr class="table__row">
+                <td class="table__cell">$ npm install -g</td>
+                <td class="table__cell table__cell--muted">
+                  Install the CLI everywhere. Zero config after that
+                </td>
+                <td class="table__cell">global binary</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SPLIT: HOW IT WORKS + TRY IT -->
+      <section id="how" class="split">
+        <p class="caption split__label">How it works</p>
+        <h2 class="heading heading-lg split__title">From file to live post</h2>
+        <div class="split__grid">
+          <div>
+            <div class="how-card">
+              <div class="how-num">01</div>
+              <div>
+                <h3>Write</h3>
+                <p>Create any .md or .txt file. Plain text, no fluff.</p>
+              </div>
+            </div>
+            <div class="how-card">
+              <div class="how-num">02</div>
+              <div>
+                <h3>Publish</h3>
+                <p>Run publish. Saves JSON, commits, and pushes to GitHub.</p>
+              </div>
+            </div>
+            <div class="how-card">
+              <div class="how-num">03</div>
+              <div>
+                <h3>Fetch</h3>
+                <p>
+                  Your website loads JSON from the GitHub raw URL. No backend
+                  needed.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="try-card">
+            <h3 class="try-card__title">Publish it yourself</h3>
+            <p class="try-card__copy">
+              Point blog-cli at any markdown file. It saves, commits, and pushes
+              — all in one command.
+            </p>
+            <div class="field">
+              <label class="field__label" for="try-path">post path</label>
+              <input
+                class="field__input"
+                id="try-path"
+                type="text"
+                value="~/notes/my-post.md"
+                spellcheck="false"
+              />
+            </div>
+            <a
+              href="https://github.com/Joelorbit/Blog_Cli"
+              target="_blank"
+              class="btn btn--accent btn--md"
+            >
+              <svg viewBox="0 0 24 24">
+                <path d="M12 5v14" />
+                <path d="m19 12-7 7-7-7" />
+              </svg>
+              Publish
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <div class="cta">
+        <span class="cta__badge"
+          ><span class="badge">own taste, own tools</span></span
+        >
+        <h2>Start blogging<br /><em>today</em></h2>
+        <p>Clone, install, publish. No config, no init, no hassle.</p>
+        <a
+          href="https://github.com/Joelorbit/Blog_Cli"
+          target="_blank"
+          class="btn btn--primary btn--lg"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+          View on GitHub
+        </a>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="foot shell">
+      <span>© 2026 Joelorbit</span>
+      <a href="https://github.com/Joelorbit/Blog_Cli" target="_blank"
+        >GitHub →</a
+      >
+    </footer>
+
+    <script>
+      function toggleTheme() {
+        const html = document.documentElement;
+        const next =
+          html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        html.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+        document.getElementById("theme-icon").innerHTML =
+          next === "dark"
+            ? '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 3v4"/><path d="M21 5h-4"/>'
+            : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>';
+      }
+      (function () {
+        const saved = localStorage.getItem("theme");
+        if (saved) {
+          document.documentElement.setAttribute("data-theme", saved);
+          if (saved === "light") {
+            document.getElementById("theme-icon").innerHTML =
+              '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>';
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>
